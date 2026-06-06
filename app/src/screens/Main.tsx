@@ -5,9 +5,11 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  StyleProp,
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
 import { BannerAd } from '../components/BannerAd';
 import { BoosterTimer } from '../components/BoosterTimer';
@@ -16,7 +18,6 @@ import { CoinIcon } from '../components/CoinIcon';
 import { GomulIcon } from '../components/GomulIcon';
 import { InfoModal } from '../components/InfoModal';
 import { IntroOverlay } from '../components/IntroOverlay';
-import { MenuModal } from '../components/MenuModal';
 import { AD_IDS } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
@@ -48,23 +49,17 @@ export function Main({ onGoExchange }: MainProps) {
     applyIdle,
     activateBooster,
     markIntroSeen,
-    resetForDev,
   } = useUserStateContext();
   const { playInterstitial } = useAds();
 
   useIdleGrowth(applyIdle, loaded);
 
-  const [introOverride, setIntroOverride] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const showIntro = loaded && (state.isFirstLaunch || introOverride);
+  const showIntro = loaded && state.isFirstLaunch;
 
   const handleIntroDone = useCallback(() => {
     if (state.isFirstLaunch) markIntroSeen();
-    setIntroOverride(false);
   }, [state.isFirstLaunch, markIntroSeen]);
-
-  const handleReplayIntro = useCallback(() => setIntroOverride(true), []);
 
   const showAdError = useCallback((err: unknown) => {
     if (err instanceof AdCooldownError) return;
@@ -127,10 +122,10 @@ export function Main({ onGoExchange }: MainProps) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* 내 엽전 + 토스 포인트로 받기 (가장 보고 싶은 정보 = 맨 위) */}
+        {/* 내 엽전 + 토스 포인트로 받기 */}
         <View style={[styles.balanceCard, styles.cardShadow]}>
           <View style={styles.balanceLeft}>
-            <CoinIcon size={38} />
+            <CoinIcon size={34} />
             <View>
               <Text style={styles.balanceLabel}>{COPY.main.balanceLabel}</Text>
               <Text style={styles.balanceValue}>
@@ -151,18 +146,30 @@ export function Main({ onGoExchange }: MainProps) {
 
         {/* 손수레 카드 */}
         <View style={[styles.cartCard, styles.cardShadow]}>
-          {state.visitStreak > 0 ? (
-            <View style={styles.streakPill}>
-              <Text style={styles.streakPillText}>
-                {COPY.main.streakFormat(state.visitStreak)}
-                {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
-              </Text>
+          {/* 모으는 속도 / 부스터 진행 (맨 위) */}
+          {isBoosterActive ? (
+            <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
+          ) : (
+            <View style={styles.speedChip}>
+              <Text style={styles.speedChipText}>⚡ {COPY.main.speedChipFormat(speedPct)}</Text>
             </View>
-          ) : null}
+          )}
 
-          <Cart fillRatio={fillRatio} size={168} />
+          <Cart fillRatio={fillRatio} size={132} />
 
-          {/* 적재량 진행 막대 (5060 직관) */}
+          {/* 추가로 고물 모으기 — 수레 바로 밑(작게) */}
+          <ActionButton
+            icon="📦"
+            label={COPY.main.btnPickUp}
+            tone="brand"
+            compact
+            ad
+            disabled={isCartFull}
+            onPress={handlePickUp}
+            note={isCartFull ? COPY.main.cartFullNote : undefined}
+          />
+
+          {/* 적재량 진행 막대 */}
           <View style={styles.progressWrap}>
             <View style={styles.progressTrack}>
               <View
@@ -174,95 +181,69 @@ export function Main({ onGoExchange }: MainProps) {
             </Text>
           </View>
 
-          {/* 쌓인 고물 값 (강조) */}
+          {/* 지금 팔면 약 N냥 */}
           <Text style={styles.cartValue}>{COPY.main.cartValueFormat(cartYeop)}</Text>
 
           {/* 쌓인 고물 4종 */}
           <View style={styles.gomulRow}>
             {GOMUL_TYPES.map((t) => (
               <View key={t} style={styles.gomulItem}>
-                <GomulIcon type={t} size={30} />
+                <GomulIcon type={t} size={28} />
                 <Text style={styles.gomulCount}>{state.cart[t]}</Text>
               </View>
             ))}
           </View>
-
-          {/* 모으는 속도 / 부스터 진행 */}
-          {isBoosterActive ? (
-            <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
-          ) : (
-            <View style={styles.speedChip}>
-              <Text style={styles.speedChipText}>⚡ {COPY.main.speedChipFormat(speedPct)}</Text>
-            </View>
-          )}
         </View>
 
-        {/* 액션 — 색으로 역할 구분 */}
-        <PrimaryButton
-          icon="📦"
-          label={COPY.main.btnPickUp}
-          disabled={isCartFull}
-          ad
-          onPress={handlePickUp}
-          note={isCartFull ? COPY.main.cartFullNote : COPY.main.btnNoteAd}
-        />
-        <PrimaryButton
-          icon="💰"
-          tone="gold"
-          label={COPY.main.btnSell}
-          disabled={isCartEmpty}
-          ad
-          onPress={handleSell}
-          note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.btnNoteAd}
-        />
-        {!isBoosterActive ? (
-          <SecondaryButton
-            icon="⚡"
-            label={COPY.main.btnBooster}
+        {/* 빠르게 모으기 / 고물 판매하기 — 한 줄 */}
+        <View style={styles.actionRow}>
+          {!isBoosterActive ? (
+            <ActionButton
+              icon="⚡"
+              label={COPY.main.btnBooster}
+              tone="outline"
+              ad
+              style={styles.flex1}
+              onPress={handleBoosterPress}
+            />
+          ) : null}
+          <ActionButton
+            icon="💰"
+            label={COPY.main.btnSell}
+            tone="gold"
             ad
-            onPress={handleBoosterPress}
-            note={COPY.main.btnNoteBoosterDuration}
+            disabled={isCartEmpty}
+            style={styles.flex1}
+            onPress={handleSell}
           />
-        ) : null}
-
-        {/* 안내 / 메뉴 (칩) */}
-        <View style={styles.chipRow}>
-          <Pressable
-            style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-            onPress={() => setGuideOpen(true)}
-          >
-            <Text style={styles.chipText}>ⓘ  {COPY.main.guideLink}</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-            onPress={() => setMenuOpen(true)}
-          >
-            <Text style={styles.chipText}>☰  {COPY.main.menuLabel}</Text>
-          </Pressable>
         </View>
+
+        {/* 안내 */}
+        <Pressable
+          style={({ pressed }) => [styles.guideChip, pressed && styles.pressed]}
+          onPress={() => setGuideOpen(true)}
+        >
+          <Text style={styles.chipText}>ⓘ  {COPY.main.guideLink}</Text>
+        </Pressable>
       </ScrollView>
 
       <BannerAd adGroupId={AD_IDS.banner} />
 
       <IntroOverlay visible={showIntro} onDone={handleIntroDone} />
       <InfoModal visible={guideOpen} onClose={() => setGuideOpen(false)} />
-      <MenuModal
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onReplayIntro={handleReplayIntro}
-        onReset={resetForDev}
-      />
     </SafeAreaView>
   );
 }
 
-interface ButtonProps {
+interface ActionButtonProps {
   label: string;
-  note?: string;
   icon?: string; // 버튼 앞 이모지 아이콘 (인지·재미 ↑)
-  tone?: 'brand' | 'gold'; // primary 버튼 색(역할 구분)
+  tone?: 'brand' | 'gold' | 'outline'; // 역할별 색
+  compact?: boolean; // 작은 버튼(수레 밑 등)
+  note?: string;
   disabled?: boolean;
-  ad?: boolean; // 광고 시청이 필요한 버튼이면 작은 AD 배지 표시
+  ad?: boolean; // 광고 필요 → 작은 AD 배지
+  style?: StyleProp<ViewStyle>; // 행 배치(flex) 등
   onPress?: () => void;
 }
 
@@ -275,44 +256,40 @@ function AdBadge() {
   );
 }
 
-function PrimaryButton({ label, note, icon, tone = 'brand', disabled, ad, onPress }: ButtonProps) {
-  const gold = tone === 'gold';
+function ActionButton({
+  label,
+  icon,
+  tone = 'brand',
+  compact,
+  note,
+  disabled,
+  ad,
+  style,
+  onPress,
+}: ActionButtonProps) {
+  const toneBg =
+    tone === 'gold' ? styles.goldBtn : tone === 'outline' ? styles.outlineBtn : styles.brandBtn;
+  const toneText =
+    tone === 'gold'
+      ? styles.goldBtnText
+      : tone === 'outline'
+        ? styles.outlineBtnText
+        : styles.brandBtnText;
   return (
-    <View style={styles.btnBlock}>
+    <View style={[styles.btnBlock, style]}>
       <Pressable
         disabled={disabled}
         onPress={onPress}
         style={({ pressed }) => [
-          styles.bigBtn,
-          gold ? styles.goldBtn : styles.brandBtn,
+          styles.actionBtn,
+          compact && styles.actionBtnCompact,
+          toneBg,
           disabled && styles.btnDisabled,
           pressed && !disabled && styles.pressed,
         ]}
       >
-        {icon ? <Text style={styles.btnIcon}>{icon}</Text> : null}
-        <Text style={gold ? styles.goldBtnText : styles.primaryBtnText}>{label}</Text>
-        {ad ? <AdBadge /> : null}
-      </Pressable>
-      {note ? <Text style={styles.btnNote}>{note}</Text> : null}
-    </View>
-  );
-}
-
-function SecondaryButton({ label, note, icon, disabled, ad, onPress }: ButtonProps) {
-  return (
-    <View style={styles.btnBlock}>
-      <Pressable
-        disabled={disabled}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.bigBtn,
-          styles.secondaryBtn,
-          disabled && styles.btnDisabled,
-          pressed && !disabled && styles.pressed,
-        ]}
-      >
-        {icon ? <Text style={styles.btnIcon}>{icon}</Text> : null}
-        <Text style={styles.secondaryBtnText}>{label}</Text>
+        {icon ? <Text style={compact ? styles.btnIconSm : styles.btnIcon}>{icon}</Text> : null}
+        <Text style={[toneText, compact && styles.btnTextSm]}>{label}</Text>
         {ad ? <AdBadge /> : null}
       </Pressable>
       {note ? <Text style={styles.btnNote}>{note}</Text> : null}
@@ -324,7 +301,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 32, alignItems: 'center', gap: 14 },
+  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 16, alignItems: 'center', gap: 10 },
 
   cardShadow: {
     shadowColor: '#5A4A3A',
@@ -339,7 +316,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -347,8 +324,8 @@ const styles = StyleSheet.create({
   },
   balanceLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   balanceLabel: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
-  balanceValue: { fontSize: 26, fontWeight: '800', color: COLORS.text },
-  balanceUnit: { fontSize: 15, fontWeight: '700', color: COLORS.textMuted },
+  balanceValue: { fontSize: 24, fontWeight: '800', color: COLORS.text },
+  balanceUnit: { fontSize: 14, fontWeight: '700', color: COLORS.textMuted },
   cashOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,23 +343,16 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 18,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  streakPill: {
-    backgroundColor: '#FFEFE2',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  streakPillText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
 
-  progressWrap: { width: '100%', alignItems: 'center', gap: 6 },
+  progressWrap: { width: '100%', alignItems: 'center', gap: 5 },
   progressTrack: {
     width: '100%',
-    height: 16,
+    height: 14,
     borderRadius: 999,
     backgroundColor: '#EFE7DA',
     overflow: 'hidden',
@@ -390,63 +360,67 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', borderRadius: 999, backgroundColor: COLORS.redBerry },
   progressText: { fontSize: 14, color: COLORS.text, fontWeight: '700' },
 
-  cartValue: { fontSize: 23, fontWeight: '800', color: COLORS.redBerryShade },
+  cartValue: { fontSize: 22, fontWeight: '800', color: COLORS.redBerryShade },
 
   gomulRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 2 },
   gomulItem: { alignItems: 'center', gap: 4 },
-  gomulCount: { fontSize: 17, fontWeight: '800', color: COLORS.text },
+  gomulCount: { fontSize: 16, fontWeight: '800', color: COLORS.text },
 
   speedChip: {
     backgroundColor: '#FFF6E0',
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 999,
   },
   speedChipText: { fontSize: 14, color: '#B07A12', fontWeight: '800' },
 
   // 액션 버튼
-  btnBlock: { width: '100%', alignItems: 'center', gap: 6 },
-  bigBtn: {
+  actionRow: { width: '100%', flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  flex1: { flex: 1 },
+  btnBlock: { width: '100%', alignItems: 'center', gap: 5 },
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
+    gap: 7,
+    paddingVertical: 15,
     borderRadius: 14,
     width: '100%',
-    maxWidth: 360,
-    minHeight: 56,
+    minHeight: 54,
   },
+  actionBtnCompact: { paddingVertical: 10, minHeight: 42, borderRadius: 12 },
   brandBtn: { backgroundColor: COLORS.redBerry },
   goldBtn: { backgroundColor: COLORS.seedYellow },
-  secondaryBtn: { backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: COLORS.redBerry },
-  btnIcon: { fontSize: 19 },
-  primaryBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  goldBtnText: { color: COLORS.seedBrown, fontSize: 17, fontWeight: '800' },
-  secondaryBtnText: { color: COLORS.redBerry, fontSize: 17, fontWeight: '800' },
+  outlineBtn: { backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: COLORS.redBerry },
+  btnIcon: { fontSize: 18 },
+  btnIconSm: { fontSize: 15 },
+  brandBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  goldBtnText: { color: COLORS.seedBrown, fontSize: 16, fontWeight: '800' },
+  outlineBtnText: { color: COLORS.redBerry, fontSize: 16, fontWeight: '800' },
+  btnTextSm: { fontSize: 15 },
   adBadge: {
     position: 'absolute',
-    top: 6,
-    right: 8,
+    top: 5,
+    right: 7,
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 4,
     paddingHorizontal: 4,
     paddingVertical: 1,
   },
   adBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
-  btnNote: { fontSize: 13, color: COLORS.textMuted, fontWeight: '500' },
+  btnNote: { fontSize: 12, color: COLORS.textMuted, fontWeight: '500' },
   btnDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.85 },
 
-  // 안내 / 메뉴 칩
-  chipRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
-  chip: {
+  // 안내 칩
+  guideChip: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E4D9C8',
-    paddingVertical: 9,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 999,
+    marginTop: 2,
   },
   chipText: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
 });

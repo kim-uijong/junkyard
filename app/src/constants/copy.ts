@@ -20,7 +20,7 @@ export const COPY = {
     speedLabel: '모으는 속도',
     capacityFormat: (n: number, max: number) => `${n} / ${max}개`,
     speedFormat: (pct: number) => `${pct.toLocaleString()}%`,
-    cartValueFormat: (yeop: number) => `쌓인 고물 약 ${yeop.toLocaleString()}냥`,
+    cartValueFormat: (yeop: number) => `지금 팔면 약 ${yeop.toLocaleString()}냥`,
     streakFormat: (n: number) => `🔥 ${n}일 연속 방문`,
     streakBonusSuffix: '수집 +10%',
     btnPickUp: '추가로 고물 모으기',
