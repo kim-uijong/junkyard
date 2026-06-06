@@ -1,0 +1,14 @@
+# 의존성
+node_modules/
+
+# 빌드 산출물
+dist/
+*.ait
+.granite/
+.swc/
+
+# 로그 / 환경
+*.log
+npm-debug.log
+.env
+.DS_Store

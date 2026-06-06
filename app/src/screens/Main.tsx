@@ -1,0 +1,343 @@
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { BannerAd } from '../components/BannerAd';
+import { BoosterTimer } from '../components/BoosterTimer';
+import { Cart } from '../components/Cart';
+import { InfoModal } from '../components/InfoModal';
+import { IntroOverlay } from '../components/IntroOverlay';
+import { MenuModal } from '../components/MenuModal';
+import { AD_IDS } from '../constants/adIds';
+import { COLORS } from '../constants/colors';
+import { COPY } from '../constants/copy';
+import {
+  ATTEND_DAILY_LIMIT,
+  ATTEND_WON,
+  CART_CAPACITY,
+  STREAK_BONUS_DAYS,
+  totalCount,
+} from '../constants/gomul';
+import { useAds } from '../hooks/AdsContext';
+import { useIdleGrowth } from '../hooks/useIdleGrowth';
+import { useUserStateContext } from '../hooks/UserStateContext';
+import { AdCooldownError } from '../utils/ads';
+import { grantPromotion } from '../utils/promotion';
+import { promotionErrorMessage } from '../utils/promotionErrors';
+import { getServerTimeWithFallback } from '../utils/timeUtils';
+
+const PROMO_ATTEND = 'GOMUL_DAILY';
+
+interface MainProps {
+  onGoExchange?: () => void;
+}
+
+export function Main({ onGoExchange }: MainProps) {
+  const {
+    state,
+    loaded,
+    pickUp,
+    sellCart,
+    applyIdle,
+    activateBooster,
+    claimAttendance,
+    markIntroSeen,
+    resetForDev,
+  } = useUserStateContext();
+  const { playInterstitial } = useAds();
+
+  useIdleGrowth(applyIdle, loaded);
+
+  const [introOverride, setIntroOverride] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const showIntro = loaded && (state.isFirstLaunch || introOverride);
+
+  const handleIntroDone = useCallback(() => {
+    if (state.isFirstLaunch) markIntroSeen();
+    setIntroOverride(false);
+  }, [state.isFirstLaunch, markIntroSeen]);
+
+  const handleReplayIntro = useCallback(() => setIntroOverride(true), []);
+
+  const showAdError = useCallback((err: unknown) => {
+    if (err instanceof AdCooldownError) return;
+    Alert.alert(COPY.main.adErrorTitle, COPY.main.adErrorMessage);
+  }, []);
+
+  const handlePickUp = useCallback(async () => {
+    try {
+      await playInterstitial(AD_IDS.interstitial, 'small');
+      pickUp();
+    } catch (e) {
+      showAdError(e);
+    }
+  }, [playInterstitial, pickUp, showAdError]);
+
+  const handleSell = useCallback(async () => {
+    try {
+      await playInterstitial(AD_IDS.interstitial, 'full');
+      sellCart();
+    } catch (e) {
+      showAdError(e);
+    }
+  }, [playInterstitial, sellCart, showAdError]);
+
+  const handleBoosterPress = useCallback(async () => {
+    try {
+      await playInterstitial(AD_IDS.interstitial, 'full');
+      const now = await getServerTimeWithFallback();
+      activateBooster(now);
+    } catch (e) {
+      showAdError(e);
+    }
+  }, [playInterstitial, activateBooster, showAdError]);
+
+  const handleBoosterEnd = useCallback(async () => {
+    const now = await getServerTimeWithFallback();
+    applyIdle(now);
+  }, [applyIdle]);
+
+  const handleAttend = useCallback(async () => {
+    if (state.todayAttendCount >= ATTEND_DAILY_LIMIT) return;
+    try {
+      await playInterstitial(AD_IDS.interstitial, 'small');
+      const result = await grantPromotion({ promotionCode: PROMO_ATTEND, amount: ATTEND_WON });
+      if ('key' in result) {
+        claimAttendance();
+      } else {
+        const { message } = promotionErrorMessage(result.errorCode);
+        Alert.alert(COPY.main.adErrorTitle, message);
+      }
+    } catch (e) {
+      showAdError(e);
+    }
+  }, [state.todayAttendCount, playInterstitial, claimAttendance, showAdError]);
+
+  if (!loaded) {
+    return (
+      <SafeAreaView style={[styles.safe, styles.center]}>
+        <ActivityIndicator color={COLORS.redBerry} />
+      </SafeAreaView>
+    );
+  }
+
+  const cartCount = totalCount(state.cart);
+  const isCartFull = cartCount >= CART_CAPACITY;
+  const isCartEmpty = cartCount <= 0;
+  const isBoosterActive = state.boosterEndTime > Date.now();
+  const fillRatio = cartCount / CART_CAPACITY;
+  const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{COPY.main.headerTitle}</Text>
+        <Pressable onPress={() => setMenuOpen(true)} hitSlop={8}>
+          <Text style={styles.menuBtn}>{COPY.main.menuLabel}</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        {/* 출석 — 광고 보고 1원 (하루 5회) */}
+        <SecondaryButton
+          label={COPY.main.btnAttend}
+          disabled={attendDone}
+          onPress={handleAttend}
+          note={
+            attendDone
+              ? COPY.main.attendDone
+              : COPY.main.attendLeftFormat(ATTEND_DAILY_LIMIT - state.todayAttendCount)
+          }
+        />
+
+        {/* 손수레 */}
+        <View style={styles.cartCard}>
+          <View style={styles.cartStatRow}>
+            <Text style={styles.cartStat}>
+              {COPY.main.capacityLabel}  {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
+            </Text>
+            {state.visitStreak > 0 ? (
+              <Text style={styles.streakText}>
+                {COPY.main.streakFormat(state.visitStreak)}
+                {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
+              </Text>
+            ) : null}
+          </View>
+          <Cart fillRatio={fillRatio} size={220} />
+          <PrimaryButton
+            label={COPY.main.btnPickUp}
+            disabled={isCartFull}
+            onPress={handlePickUp}
+            note={isCartFull ? COPY.main.cartFullNote : COPY.main.btnNoteAd}
+          />
+        </View>
+
+        {/* 엽전 */}
+        <View style={styles.yeopBox}>
+          <Text style={styles.yeopLabel}>{COPY.main.yeopLabel}</Text>
+          <Text style={styles.yeopValue}>
+            {state.yeopjeon.toLocaleString()} {COPY.main.yeopUnit}
+          </Text>
+        </View>
+
+        {/* 빠르게 모으기 / 창고로 옮기기 */}
+        {isBoosterActive ? (
+          <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
+        ) : (
+          <SecondaryButton
+            label={COPY.main.btnBooster}
+            onPress={handleBoosterPress}
+            note={COPY.main.btnNoteBoosterDuration}
+          />
+        )}
+
+        <PrimaryButton
+          label={COPY.main.btnSell}
+          disabled={isCartEmpty}
+          onPress={handleSell}
+          note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.btnNoteAd}
+        />
+
+        <Pressable
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          onPress={onGoExchange}
+        >
+          <Text style={styles.linkText}>{COPY.main.exchangeLink}</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          onPress={() => setGuideOpen(true)}
+        >
+          <Text style={styles.linkText}>{COPY.main.guideLink}</Text>
+        </Pressable>
+      </ScrollView>
+
+      <BannerAd adGroupId={AD_IDS.banner} />
+
+      <IntroOverlay visible={showIntro} onDone={handleIntroDone} />
+      <InfoModal visible={guideOpen} onClose={() => setGuideOpen(false)} />
+      <MenuModal
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onReplayIntro={handleReplayIntro}
+        onReset={resetForDev}
+      />
+    </SafeAreaView>
+  );
+}
+
+interface ButtonProps {
+  label: string;
+  note?: string;
+  disabled?: boolean;
+  onPress?: () => void;
+}
+
+function PrimaryButton({ label, note, disabled, onPress }: ButtonProps) {
+  return (
+    <View style={styles.btnBlock}>
+      <Pressable
+        disabled={disabled}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.primaryBtn,
+          disabled && styles.btnDisabled,
+          pressed && !disabled && styles.pressed,
+        ]}
+      >
+        <Text style={styles.primaryBtnText}>{label}</Text>
+      </Pressable>
+      {note ? <Text style={styles.btnNote}>{note}</Text> : null}
+    </View>
+  );
+}
+
+function SecondaryButton({ label, note, disabled, onPress }: ButtonProps) {
+  return (
+    <View style={styles.btnBlock}>
+      <Pressable
+        disabled={disabled}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.secondaryBtn,
+          disabled && styles.btnDisabled,
+          pressed && !disabled && styles.pressed,
+        ]}
+      >
+        <Text style={styles.secondaryBtnText}>{label}</Text>
+      </Pressable>
+      {note ? <Text style={styles.btnNote}>{note}</Text> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: COLORS.bg },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8DDCB',
+    backgroundColor: COLORS.bg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
+  menuBtn: { fontSize: 14, color: COLORS.text, fontWeight: '500' },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32, alignItems: 'center', gap: 16 },
+  cartCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 10,
+  },
+  cartStatRow: { width: '100%', alignItems: 'center', gap: 2 },
+  cartStat: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
+  streakText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
+  yeopBox: { width: '100%', alignItems: 'center', gap: 2 },
+  yeopLabel: { fontSize: 13, color: COLORS.textMuted },
+  yeopValue: { fontSize: 26, fontWeight: '800', color: COLORS.redBerryShade },
+  btnBlock: { width: '100%', alignItems: 'center', gap: 6 },
+  primaryBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.redBerry,
+    paddingVertical: 14,
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 320,
+  },
+  primaryBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  secondaryBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: COLORS.iconSun,
+    paddingVertical: 14,
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 320,
+  },
+  secondaryBtnText: { color: COLORS.iconSun, fontSize: 16, fontWeight: '700' },
+  btnNote: { fontSize: 12, color: COLORS.textMuted },
+  btnDisabled: { opacity: 0.5 },
+  pressed: { opacity: 0.85 },
+  link: { paddingVertical: 10, paddingHorizontal: 16 },
+  linkText: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
+});

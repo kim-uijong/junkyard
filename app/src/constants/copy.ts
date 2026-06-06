@@ -1,0 +1,113 @@
+// 사용자에게 노출되는 모든 텍스트. 검수 정책 검증의 단일 진실.
+// scripts/check-copy.mjs가 블랙리스트 키워드를 검출(뽑기/룰렛/당첨 등 금지).
+// 인앱 재화는 "엽전"(≠포인트), 현금화는 "토스 포인트로 받기"(≠출금).
+
+export const COPY = {
+  appName: '나만의고물상',
+
+  intro: {
+    title: '고물을 주워 모아 엽전으로, 엽전은 토스 포인트로',
+    subtitle: '광고 수익은 보상을 드리는 데 사용돼요',
+    cta: '시작하기',
+    autoHint: '잠시 후 자동으로 시작돼요',
+  },
+
+  main: {
+    headerTitle: '나만의고물상',
+    menuLabel: '메뉴',
+    cartTitle: '손수레',
+    capacityLabel: '최대 적재량',
+    speedLabel: '수집 속도',
+    capacityFormat: (n: number, max: number) => `${n} / ${max}개`,
+    streakFormat: (n: number) => `🔥 ${n}일 연속 방문`,
+    streakBonusSuffix: '수집 +10%',
+    btnPickUp: '추가로 줍기',
+    btnBooster: '일꾼 투입',
+    btnSell: '고물 팔기',
+    btnNoteAd: '광고 시청 후 진행돼요',
+    btnNoteBoosterDuration: '1시간 동안 빠르게 주워요',
+    cartFullNote: '손수레가 가득 찼어요. 고물을 팔아주세요',
+    cartEmptyNote: '손수레에 담긴 고물이 없어요',
+    yeopLabel: '지금까지 모은 엽전',
+    yeopUnit: '냥',
+    boosterPrefix: '일꾼이 줍는 중',
+    exchangeLink: '엽전 교환소 →',
+    guideLink: '고물상 안내 →',
+    harvestFormat: (n: number) => `그동안 고물 ${n}개를 주웠어요`,
+    btnAttend: '광고 보고 1원',
+    attendLeftFormat: (left: number) => `오늘 ${left}번 더 받을 수 있어요`,
+    attendDone: '오늘 출석을 다 받았어요',
+    adErrorTitle: '광고를 불러오지 못했어요',
+    adErrorMessage: '잠시 후 다시 시도해주세요',
+    devReset: '초기화',
+  },
+
+  exchange: {
+    headerTitle: '엽전 교환소',
+    back: '← 메인',
+    yeopBalanceFormat: (n: number) => `보유 엽전  ${n.toLocaleString()}냥`,
+    exchangeSection: '토스 포인트로 받기',
+    exchangeNote: '130냥 = 1원 · 하루 15원까지 받을 수 있어요',
+    btnExchangeFormat: (won: number) => `${won}원 받기`,
+    noExchangeable: '교환할 엽전이 부족해요',
+    dailyCapReached: '오늘 받을 수 있는 한도를 다 채웠어요',
+    pendingText: '교환 처리 중...',
+    summaryLabel: '누적 교환',
+    summaryFormat: (won: number) => `${won.toLocaleString()}원`,
+    confirmTitle: '교환 확인',
+    confirmMessageFormat: (yeop: number, won: number) =>
+      `${yeop.toLocaleString()}냥 → ${won}원으로 받을까요?`,
+    confirmYes: '받기',
+    confirmNo: '취소',
+    successTitle: '교환 완료',
+    successMessageFormat: (won: number) => `${won}원이 토스 포인트로 들어왔어요`,
+    failTitle: '교환 실패',
+    failGenericMessage: '잠시 후 다시 시도해주세요',
+  },
+
+  ads: {
+    fullPopupTitle: '광고 수익은 보상을 드리는 데 사용돼요',
+    fullPopupLoading: '광고를 불러오는 중...',
+    smallLoading: '잠시만요...',
+    placeholderLabel: '광고 영역',
+    placeholderNote: 'Phase 5b에서 InlineAd 활성',
+  },
+
+  menu: {
+    headerTitle: '메뉴',
+    privacy: '개인정보 처리방침',
+    support: '고객센터',
+    introReplay: '소개 다시 보기',
+    reset: '데이터 초기화 (개발용)',
+    resetConfirmTitle: '데이터 초기화',
+    resetConfirmMessage: '손수레·엽전·누적 교환액이 모두 0으로 돌아가요. 진행할까요?',
+    resetConfirmYes: '초기화',
+    resetConfirmNo: '취소',
+    // 노션 공용 페이지(이용약관 + 개인정보 처리방침)
+    privacyUrl: 'https://www.notion.so/368bd13ad0108095a774c3a0e4bc66dc',
+    supportEmail: 'ksw03090@gmail.com',
+  },
+
+  guide: {
+    headerTitle: '고물상 안내',
+    close: '닫기',
+    gomulTitle: '고물 종류와 시세',
+    gomulLineFormat: (emoji: string, label: string, price: number) => `${emoji} ${label} — ${price}냥`,
+    howTitle: '모으는 법',
+    howIdle: '손수레에 고물이 시간마다 자동으로 쌓여요.',
+    howActive: '광고로 줍거나 빠르게 모으면 고철 같은 비싼 고물이 잘 나와요.',
+    howMove: "손수레가 차면 '고물 팔기'를 눌러 엽전을 받아요.",
+    exchangeTitle: '엽전 교환',
+    exchangeBody: '모은 엽전은 토스 포인트로 바꿔요. 130냥 = 1원, 하루 15원까지 받을 수 있어요.',
+    notice: '주운 고물은 언제나 값이 나가요! 빈손은 없어요.',
+  },
+
+  promotionError: {
+    versionMessage: '토스 앱을 최신 버전으로 업데이트해주세요',
+    retryMessage: '잠시 후 다시 시도해주세요',
+    suspendedMessage: '현재 이벤트가 일시 중단됐어요',
+    budgetMessage: '보상 예산이 모두 소진됐어요',
+    overLimitMessage: '교환 금액이 한도를 초과했어요',
+    unknownFormat: (code: string) => `오류가 발생했어요 (${code})`,
+  },
+} as const;
