@@ -19,6 +19,8 @@ export const COPY = {
     capacityLabel: '최대 적재량',
     speedLabel: '수집 속도',
     capacityFormat: (n: number, max: number) => `${n} / ${max}개`,
+    speedFormat: (pct: number) => `${pct.toLocaleString()}%`,
+    cartValueFormat: (yeop: number) => `쌓인 고물 약 ${yeop.toLocaleString()}냥`,
     streakFormat: (n: number) => `🔥 ${n}일 연속 방문`,
     streakBonusSuffix: '수집 +10%',
     btnPickUp: '추가로 줍기',

@@ -37,8 +37,9 @@ export const ATTEND_WON = 1;
 export const STREAK_BONUS_DAYS = 7;
 export const STREAK_BONUS_MULT = 1.1;
 
-// 방치 수집 속도: 4분당 고물 1개 (오프라인 8시간이면 120개 ≈ 손수레 가득).
-export const IDLE_MS_PER_ITEM = 4 * 60 * 1000;
+// 방치 수집 속도: 8초당 고물 1개 (손수레가 눈에 보이게 차오름). 오프라인 누적 캡 8시간.
+// 지급은 엽전→토스 교환의 일일 캡(15원)이 묶으므로 방치가 빨라도 BM 안전.
+export const IDLE_MS_PER_ITEM = 8 * 1000;
 export const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 
 // 빠르게 모으기(부스터): 일정 시간 수집 속도 25배.

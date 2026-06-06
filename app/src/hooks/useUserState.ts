@@ -84,11 +84,12 @@ export function useUserState(): UseUserStateResult {
       return;
     }
     const room = CART_CAPACITY - totalCount(s.cart);
-    const usedElapsed = Math.min(Math.max(0, now - s.lastUpdateTime), OFFLINE_CAP_MS);
-    if (room <= 0 || usedElapsed <= 0) {
+    if (room <= 0) {
+      // 손수레 가득 — 누적 보류, 기준 시각만 갱신
       setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
       return;
     }
+    const usedElapsed = Math.min(Math.max(0, now - s.lastUpdateTime), OFFLINE_CAP_MS);
     const windowStart = now - usedElapsed;
     const boostedMs = Math.max(
       0,
@@ -98,7 +99,8 @@ export function useUserState(): UseUserStateResult {
     const effectiveMs = normalMs + boostedMs * BOOSTER_MULTIPLIER;
     const items = Math.min(room, Math.floor((effectiveMs / IDLE_MS_PER_ITEM) * bonusMult));
     if (items <= 0) {
-      setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
+      // 아직 1개를 못 채움 → lastUpdateTime 유지(잔여 시간 누적), 날짜 리셋만 반영
+      if (dayPatch) setState((p) => ({ ...p, ...dayPatch }));
       return;
     }
     const drawn = drawGomul(items, IDLE_WEIGHTS);

@@ -21,8 +21,11 @@ import { COPY } from '../constants/copy';
 import {
   ATTEND_DAILY_LIMIT,
   ATTEND_WON,
+  BOOSTER_MULTIPLIER,
   CART_CAPACITY,
   STREAK_BONUS_DAYS,
+  STREAK_BONUS_MULT,
+  sellValue,
   totalCount,
 } from '../constants/gomul';
 import { useAds } from '../hooks/AdsContext';
@@ -135,6 +138,12 @@ export function Main({ onGoExchange }: MainProps) {
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
   const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
+  const cartYeop = sellValue(state.cart); // 손수레에 쌓인 고물의 판매가(엽전) — 실시간 증가
+  const speedPct = Math.round(
+    100 *
+      (state.visitStreak >= STREAK_BONUS_DAYS ? STREAK_BONUS_MULT : 1) *
+      (isBoosterActive ? BOOSTER_MULTIPLIER : 1)
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -164,14 +173,18 @@ export function Main({ onGoExchange }: MainProps) {
             <Text style={styles.cartStat}>
               {COPY.main.capacityLabel}  {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
             </Text>
-            {state.visitStreak > 0 ? (
-              <Text style={styles.streakText}>
-                {COPY.main.streakFormat(state.visitStreak)}
-                {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
-              </Text>
-            ) : null}
+            <Text style={styles.cartStat}>
+              {COPY.main.speedLabel}  {COPY.main.speedFormat(speedPct)}
+            </Text>
           </View>
+          {state.visitStreak > 0 ? (
+            <Text style={styles.streakText}>
+              {COPY.main.streakFormat(state.visitStreak)}
+              {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
+            </Text>
+          ) : null}
           <Cart fillRatio={fillRatio} size={220} />
+          <Text style={styles.cartValue}>{COPY.main.cartValueFormat(cartYeop)}</Text>
           <PrimaryButton
             label={COPY.main.btnPickUp}
             disabled={isCartFull}
@@ -306,9 +319,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  cartStatRow: { width: '100%', alignItems: 'center', gap: 2 },
+  cartStatRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
   cartStat: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
   streakText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
+  cartValue: { fontSize: 22, fontWeight: '800', color: COLORS.redBerryShade },
   yeopBox: { width: '100%', alignItems: 'center', gap: 2 },
   yeopLabel: { fontSize: 13, color: COLORS.textMuted },
   yeopValue: { fontSize: 26, fontWeight: '800', color: COLORS.redBerryShade },
