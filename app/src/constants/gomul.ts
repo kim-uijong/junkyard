@@ -37,10 +37,15 @@ export const ATTEND_WON = 1;
 export const STREAK_BONUS_DAYS = 7;
 export const STREAK_BONUS_MULT = 1.1;
 
-// 방치 수집 속도: 8초당 고물 1개 (손수레가 눈에 보이게 차오름). 오프라인 누적 캡 8시간.
-// 지급은 엽전→토스 교환의 일일 캡(15원)이 묶으므로 방치가 빨라도 BM 안전.
-export const IDLE_MS_PER_ITEM = 8 * 1000;
+// 방치 수집 속도: 60초당 고물 1개(체감용). 오프라인 누적 캡 8시간.
+export const IDLE_MS_PER_ITEM = 60 * 1000;
 export const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
+
+// 방치 일일 적립 상한(냥). BM 핵심 — 방치는 '안심용 장식', 의미 있는 적립은 광고로만.
+// 상한이 있으면 방치 속도는 '얼마나 빨리 상한까지 차느냐'만 결정. (무임승차 차단)
+export const IDLE_DAILY_CAP_YEOP = 260; // ≈ 2원/일
+// 방치 분포 기대값(냥/개) — 일일 상한을 개수로 환산할 때 사용. 폐지70/공병22/고철7/금덩이1 → 4.2
+export const IDLE_AVG_YEOP = 4.2;
 
 // 빠르게 모으기(부스터): 일정 시간 수집 속도 25배.
 export const BOOSTER_MULTIPLIER = 25;

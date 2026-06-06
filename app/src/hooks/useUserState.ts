@@ -7,6 +7,8 @@ import {
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
   EMPTY_COUNTS,
+  IDLE_AVG_YEOP,
+  IDLE_DAILY_CAP_YEOP,
   IDLE_MS_PER_ITEM,
   IDLE_WEIGHTS,
   ITEMS_PER_PICK,
@@ -70,10 +72,16 @@ export function useUserState(): UseUserStateResult {
     const today = dateKeyKST(now);
     let dayPatch: Partial<UserState> | null = null;
     if (s.todayDate !== today) {
-      // 어제 방문했으면 연속+1, 아니면 1로 리셋
+      // 어제 방문했으면 연속+1, 아니면 1로 리셋. 방치 일일 적립도 리셋.
       const yesterday = dateKeyKST(now - 24 * 60 * 60 * 1000);
       const visitStreak = s.todayDate === yesterday ? s.visitStreak + 1 : 1;
-      dayPatch = { todayDate: today, todayExchangedWon: 0, todayAttendCount: 0, visitStreak };
+      dayPatch = {
+        todayDate: today,
+        todayExchangedWon: 0,
+        todayAttendCount: 0,
+        todayIdleYeop: 0,
+        visitStreak,
+      };
     }
     // 개근 보너스: 연속 방문 7일 이상이면 수집량 +10%
     const effectiveStreak = dayPatch ? dayPatch.visitStreak! : s.visitStreak;
@@ -89,6 +97,13 @@ export function useUserState(): UseUserStateResult {
       setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
       return;
     }
+    // 방치 일일 상한(냥): BM 핵심 — 상한 도달 시 시간만 흘려보내 이월 폭주 방지
+    const idleYeopToday = dayPatch ? 0 : s.todayIdleYeop;
+    const remainingCap = IDLE_DAILY_CAP_YEOP - idleYeopToday;
+    if (remainingCap <= 0) {
+      setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
+      return;
+    }
     const usedElapsed = Math.min(Math.max(0, now - s.lastUpdateTime), OFFLINE_CAP_MS);
     const windowStart = now - usedElapsed;
     const boostedMs = Math.max(
@@ -97,14 +112,28 @@ export function useUserState(): UseUserStateResult {
     );
     const normalMs = usedElapsed - boostedMs;
     const effectiveMs = normalMs + boostedMs * BOOSTER_MULTIPLIER;
-    const items = Math.min(room, Math.floor((effectiveMs / IDLE_MS_PER_ITEM) * bonusMult));
+    // 상한을 개수로 환산(평균 EV 기준)해 한 번에 과적립되지 않게 제한
+    const capItems = Math.ceil(remainingCap / IDLE_AVG_YEOP);
+    const items = Math.min(
+      room,
+      capItems,
+      Math.floor((effectiveMs / IDLE_MS_PER_ITEM) * bonusMult)
+    );
     if (items <= 0) {
       // 아직 1개를 못 채움 → lastUpdateTime 유지(잔여 시간 누적), 날짜 리셋만 반영
       if (dayPatch) setState((p) => ({ ...p, ...dayPatch }));
       return;
     }
     const drawn = drawGomul(items, IDLE_WEIGHTS);
-    setState((p) => ({ ...p, ...dayPatch, cart: addCounts(p.cart, drawn), lastUpdateTime: now }));
+    const gainedYeop = sellValue(drawn);
+    const newIdleYeop = Math.min(IDLE_DAILY_CAP_YEOP, idleYeopToday + gainedYeop);
+    setState((p) => ({
+      ...p,
+      ...dayPatch,
+      cart: addCounts(p.cart, drawn),
+      lastUpdateTime: now,
+      todayIdleYeop: newIdleYeop,
+    }));
   }, []);
 
   const pickUp = useCallback(() => {
