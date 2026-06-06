@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { Bolt } from './icons/Bolt';
 
@@ -45,14 +44,13 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#FFF6E0',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 320,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignSelf: 'center',
     justifyContent: 'center',
   },
-  text: { fontSize: 15, color: COLORS.iconSun, fontWeight: '600' },
+  text: { fontSize: 14, color: '#B07A12', fontWeight: '800' },
 });

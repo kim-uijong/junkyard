@@ -12,6 +12,7 @@ import {
 import { BannerAd } from '../components/BannerAd';
 import { BoosterTimer } from '../components/BoosterTimer';
 import { Cart } from '../components/Cart';
+import { CoinIcon } from '../components/CoinIcon';
 import { GomulIcon } from '../components/GomulIcon';
 import { InfoModal } from '../components/InfoModal';
 import { IntroOverlay } from '../components/IntroOverlay';
@@ -126,99 +127,119 @@ export function Main({ onGoExchange }: MainProps) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* 손수레 */}
-        <View style={styles.cartCard}>
-          {/* 변동 값 — 최대 적재량 / 모으는 속도 (박스) */}
-          <View style={styles.statRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>{COPY.main.capacityLabel}</Text>
-              <Text style={styles.statValue}>
-                {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
+        {/* 내 엽전 + 토스 포인트로 받기 (가장 보고 싶은 정보 = 맨 위) */}
+        <View style={[styles.balanceCard, styles.cardShadow]}>
+          <View style={styles.balanceLeft}>
+            <CoinIcon size={38} />
+            <View>
+              <Text style={styles.balanceLabel}>{COPY.main.balanceLabel}</Text>
+              <Text style={styles.balanceValue}>
+                {state.yeopjeon.toLocaleString()}
+                <Text style={styles.balanceUnit}> {COPY.main.yeopUnit}</Text>
               </Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>{COPY.main.speedLabel}</Text>
-              <Text style={styles.statValue}>{COPY.main.speedFormat(speedPct)}</Text>
-            </View>
           </View>
+          <Pressable
+            onPress={onGoExchange}
+            style={({ pressed }) => [styles.cashOutBtn, pressed && styles.pressed]}
+            hitSlop={6}
+          >
+            <Text style={styles.cashOutText}>{COPY.main.cashOutBtn}</Text>
+            <Text style={styles.cashOutArrow}>›</Text>
+          </Pressable>
+        </View>
+
+        {/* 손수레 카드 */}
+        <View style={[styles.cartCard, styles.cardShadow]}>
           {state.visitStreak > 0 ? (
-            <Text style={styles.streakText}>
-              {COPY.main.streakFormat(state.visitStreak)}
-              {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
-            </Text>
+            <View style={styles.streakPill}>
+              <Text style={styles.streakPillText}>
+                {COPY.main.streakFormat(state.visitStreak)}
+                {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
+              </Text>
+            </View>
           ) : null}
-          <Cart fillRatio={fillRatio} size={170} />
+
+          <Cart fillRatio={fillRatio} size={168} />
+
+          {/* 적재량 진행 막대 (5060 직관) */}
+          <View style={styles.progressWrap}>
+            <View style={styles.progressTrack}>
+              <View
+                style={[styles.progressFill, { width: `${Math.min(100, Math.round(fillRatio * 100))}%` }]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {COPY.main.capacityLabel} {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
+            </Text>
+          </View>
+
+          {/* 쌓인 고물 값 (강조) */}
           <Text style={styles.cartValue}>{COPY.main.cartValueFormat(cartYeop)}</Text>
 
-          {/* 쌓인 고물 4종 내역 */}
+          {/* 쌓인 고물 4종 */}
           <View style={styles.gomulRow}>
             {GOMUL_TYPES.map((t) => (
               <View key={t} style={styles.gomulItem}>
-                <GomulIcon type={t} size={28} />
+                <GomulIcon type={t} size={30} />
                 <Text style={styles.gomulCount}>{state.cart[t]}</Text>
               </View>
             ))}
           </View>
 
-          {/* 광고 보고 추가로 고물 모으기 */}
-          <PrimaryButton
-            label={COPY.main.btnPickUp}
-            disabled={isCartFull}
-            ad
-            onPress={handlePickUp}
-            note={isCartFull ? COPY.main.cartFullNote : COPY.main.btnNoteAd}
-          />
+          {/* 모으는 속도 / 부스터 진행 */}
+          {isBoosterActive ? (
+            <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
+          ) : (
+            <View style={styles.speedChip}>
+              <Text style={styles.speedChipText}>⚡ {COPY.main.speedChipFormat(speedPct)}</Text>
+            </View>
+          )}
         </View>
 
-        {/* 빠르게 모으기 (부스터) */}
-        {isBoosterActive ? (
-          <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
-        ) : (
-          <SecondaryButton
-            label={COPY.main.btnBooster}
-            ad
-            onPress={handleBoosterPress}
-            note={COPY.main.btnNoteBoosterDuration}
-          />
-        )}
-
-        {/* 고물 판매하기 → 엽전 */}
+        {/* 액션 — 색으로 역할 구분 */}
         <PrimaryButton
+          icon="📦"
+          label={COPY.main.btnPickUp}
+          disabled={isCartFull}
+          ad
+          onPress={handlePickUp}
+          note={isCartFull ? COPY.main.cartFullNote : COPY.main.btnNoteAd}
+        />
+        <PrimaryButton
+          icon="💰"
+          tone="gold"
           label={COPY.main.btnSell}
           disabled={isCartEmpty}
           ad
           onPress={handleSell}
           note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.btnNoteAd}
         />
+        {!isBoosterActive ? (
+          <SecondaryButton
+            icon="⚡"
+            label={COPY.main.btnBooster}
+            ad
+            onPress={handleBoosterPress}
+            note={COPY.main.btnNoteBoosterDuration}
+          />
+        ) : null}
 
-        {/* 엽전 잔액 */}
-        <View style={styles.yeopBox}>
-          <Text style={styles.yeopLabel}>{COPY.main.yeopLabel}</Text>
-          <Text style={styles.yeopValue}>
-            {state.yeopjeon.toLocaleString()} {COPY.main.yeopUnit}
-          </Text>
+        {/* 안내 / 메뉴 (칩) */}
+        <View style={styles.chipRow}>
+          <Pressable
+            style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+            onPress={() => setGuideOpen(true)}
+          >
+            <Text style={styles.chipText}>ⓘ  {COPY.main.guideLink}</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+            onPress={() => setMenuOpen(true)}
+          >
+            <Text style={styles.chipText}>☰  {COPY.main.menuLabel}</Text>
+          </Pressable>
         </View>
-
-        <Pressable
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-          onPress={onGoExchange}
-        >
-          <Text style={styles.linkText}>{COPY.main.exchangeLink}</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-          onPress={() => setGuideOpen(true)}
-        >
-          <Text style={styles.linkText}>{COPY.main.guideLink}</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-          onPress={() => setMenuOpen(true)}
-        >
-          <Text style={styles.linkText}>{COPY.main.menuLabel}</Text>
-        </Pressable>
       </ScrollView>
 
       <BannerAd adGroupId={AD_IDS.banner} />
@@ -238,12 +259,14 @@ export function Main({ onGoExchange }: MainProps) {
 interface ButtonProps {
   label: string;
   note?: string;
+  icon?: string; // 버튼 앞 이모지 아이콘 (인지·재미 ↑)
+  tone?: 'brand' | 'gold'; // primary 버튼 색(역할 구분)
   disabled?: boolean;
   ad?: boolean; // 광고 시청이 필요한 버튼이면 작은 AD 배지 표시
   onPress?: () => void;
 }
 
-// 광고 시청이 필요함을 알리는 작은 배지
+// 광고 시청이 필요함을 알리는 작은 배지 (모든 배경에서 가독)
 function AdBadge() {
   return (
     <View style={styles.adBadge}>
@@ -252,19 +275,22 @@ function AdBadge() {
   );
 }
 
-function PrimaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
+function PrimaryButton({ label, note, icon, tone = 'brand', disabled, ad, onPress }: ButtonProps) {
+  const gold = tone === 'gold';
   return (
     <View style={styles.btnBlock}>
       <Pressable
         disabled={disabled}
         onPress={onPress}
         style={({ pressed }) => [
-          styles.primaryBtn,
+          styles.bigBtn,
+          gold ? styles.goldBtn : styles.brandBtn,
           disabled && styles.btnDisabled,
           pressed && !disabled && styles.pressed,
         ]}
       >
-        <Text style={styles.primaryBtnText}>{label}</Text>
+        {icon ? <Text style={styles.btnIcon}>{icon}</Text> : null}
+        <Text style={gold ? styles.goldBtnText : styles.primaryBtnText}>{label}</Text>
         {ad ? <AdBadge /> : null}
       </Pressable>
       {note ? <Text style={styles.btnNote}>{note}</Text> : null}
@@ -272,18 +298,20 @@ function PrimaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
   );
 }
 
-function SecondaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
+function SecondaryButton({ label, note, icon, disabled, ad, onPress }: ButtonProps) {
   return (
     <View style={styles.btnBlock}>
       <Pressable
         disabled={disabled}
         onPress={onPress}
         style={({ pressed }) => [
+          styles.bigBtn,
           styles.secondaryBtn,
           disabled && styles.btnDisabled,
           pressed && !disabled && styles.pressed,
         ]}
       >
+        {icon ? <Text style={styles.btnIcon}>{icon}</Text> : null}
         <Text style={styles.secondaryBtnText}>{label}</Text>
         {ad ? <AdBadge /> : null}
       </Pressable>
@@ -296,83 +324,129 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32, alignItems: 'center', gap: 16 },
+  content: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 32, alignItems: 'center', gap: 14 },
+
+  cardShadow: {
+    shadowColor: '#5A4A3A',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+
+  // 내 엽전 바
+  balanceCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  balanceLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  balanceLabel: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
+  balanceValue: { fontSize: 26, fontWeight: '800', color: COLORS.text },
+  balanceUnit: { fontSize: 15, fontWeight: '700', color: COLORS.textMuted },
+  cashOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: COLORS.redBerry,
+    paddingVertical: 9,
+    paddingHorizontal: 13,
+    borderRadius: 999,
+  },
+  cashOutText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  cashOutArrow: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginTop: -2 },
+
+  // 손수레 카드
   cartCard: {
     width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 18,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  statRow: {
-    width: '100%',
-    flexDirection: 'row',
-    gap: 10,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E8DDCB',
-    paddingVertical: 10,
+  streakPill: {
+    backgroundColor: '#FFEFE2',
     paddingHorizontal: 12,
-    alignItems: 'center',
-    gap: 3,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
-  statLabel: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
-  statValue: { fontSize: 18, color: COLORS.text, fontWeight: '800' },
-  streakText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
-  cartValue: { fontSize: 22, fontWeight: '800', color: COLORS.redBerryShade },
-  gomulRow: {
+  streakPillText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
+
+  progressWrap: { width: '100%', alignItems: 'center', gap: 6 },
+  progressTrack: {
     width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 4,
+    height: 16,
+    borderRadius: 999,
+    backgroundColor: '#EFE7DA',
+    overflow: 'hidden',
   },
-  gomulItem: { alignItems: 'center', gap: 3 },
-  gomulCount: { fontSize: 16, fontWeight: '800', color: COLORS.text },
-  yeopBox: { width: '100%', alignItems: 'center', gap: 2 },
-  yeopLabel: { fontSize: 13, color: COLORS.textMuted },
-  yeopValue: { fontSize: 26, fontWeight: '800', color: COLORS.redBerryShade },
+  progressFill: { height: '100%', borderRadius: 999, backgroundColor: COLORS.redBerry },
+  progressText: { fontSize: 14, color: COLORS.text, fontWeight: '700' },
+
+  cartValue: { fontSize: 23, fontWeight: '800', color: COLORS.redBerryShade },
+
+  gomulRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 2 },
+  gomulItem: { alignItems: 'center', gap: 4 },
+  gomulCount: { fontSize: 17, fontWeight: '800', color: COLORS.text },
+
+  speedChip: {
+    backgroundColor: '#FFF6E0',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  speedChipText: { fontSize: 14, color: '#B07A12', fontWeight: '800' },
+
+  // 액션 버튼
   btnBlock: { width: '100%', alignItems: 'center', gap: 6 },
-  primaryBtn: {
+  bigBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.redBerry,
-    paddingVertical: 14,
-    borderRadius: 12,
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 14,
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 360,
+    minHeight: 56,
   },
-  primaryBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  secondaryBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: COLORS.iconSun,
-    paddingVertical: 14,
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 320,
-  },
-  secondaryBtnText: { color: COLORS.iconSun, fontSize: 16, fontWeight: '700' },
+  brandBtn: { backgroundColor: COLORS.redBerry },
+  goldBtn: { backgroundColor: COLORS.seedYellow },
+  secondaryBtn: { backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: COLORS.redBerry },
+  btnIcon: { fontSize: 19 },
+  primaryBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  goldBtnText: { color: COLORS.seedBrown, fontSize: 17, fontWeight: '800' },
+  secondaryBtnText: { color: COLORS.redBerry, fontSize: 17, fontWeight: '800' },
   adBadge: {
     position: 'absolute',
     top: 6,
     right: 8,
-    backgroundColor: 'rgba(0,0,0,0.28)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 4,
     paddingHorizontal: 4,
     paddingVertical: 1,
   },
   adBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
-  btnNote: { fontSize: 12, color: COLORS.textMuted },
-  btnDisabled: { opacity: 0.5 },
+  btnNote: { fontSize: 13, color: COLORS.textMuted, fontWeight: '500' },
+  btnDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.85 },
-  link: { paddingVertical: 10, paddingHorizontal: 16 },
-  linkText: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
+
+  // 안내 / 메뉴 칩
+  chipRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
+  chip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E4D9C8',
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
+  chipText: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
 });
