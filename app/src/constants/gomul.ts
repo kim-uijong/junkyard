@@ -14,7 +14,7 @@ export const GOMUL_INFO: Record<GomulType, GomulInfo> = {
   paper:   { label: '폐지', emoji: '📄', price: 1 },
   bottle:  { label: '공병', emoji: '🍾', price: 5 },
   scrap:   { label: '고철', emoji: '⚙️', price: 20 },
-  special: { label: '특수', emoji: '🔩', price: 100 },
+  special: { label: '금덩이', emoji: '🪙', price: 100 },
 };
 
 // 확률 가중치 — 방치(idle)는 싼 고물↑, 활동(광고 줍기)은 비싼 고물↑.

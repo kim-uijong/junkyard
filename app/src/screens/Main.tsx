@@ -19,10 +19,10 @@ import { AD_IDS } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import {
-  ATTEND_DAILY_LIMIT,
-  ATTEND_WON,
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
+  GOMUL_INFO,
+  GOMUL_TYPES,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
   sellValue,
@@ -32,11 +32,7 @@ import { useAds } from '../hooks/AdsContext';
 import { useIdleGrowth } from '../hooks/useIdleGrowth';
 import { useUserStateContext } from '../hooks/UserStateContext';
 import { AdCooldownError } from '../utils/ads';
-import { grantPromotion } from '../utils/promotion';
-import { promotionErrorMessage } from '../utils/promotionErrors';
 import { getServerTimeWithFallback } from '../utils/timeUtils';
-
-const PROMO_ATTEND = 'GOMUL_DAILY';
 
 interface MainProps {
   onGoExchange?: () => void;
@@ -50,7 +46,6 @@ export function Main({ onGoExchange }: MainProps) {
     sellCart,
     applyIdle,
     activateBooster,
-    claimAttendance,
     markIntroSeen,
     resetForDev,
   } = useUserStateContext();
@@ -108,22 +103,6 @@ export function Main({ onGoExchange }: MainProps) {
     applyIdle(now);
   }, [applyIdle]);
 
-  const handleAttend = useCallback(async () => {
-    if (state.todayAttendCount >= ATTEND_DAILY_LIMIT) return;
-    try {
-      await playInterstitial(AD_IDS.interstitial, 'small');
-      const result = await grantPromotion({ promotionCode: PROMO_ATTEND, amount: ATTEND_WON });
-      if ('key' in result) {
-        claimAttendance();
-      } else {
-        const { message } = promotionErrorMessage(result.errorCode);
-        Alert.alert(COPY.main.adErrorTitle, message);
-      }
-    } catch (e) {
-      showAdError(e);
-    }
-  }, [state.todayAttendCount, playInterstitial, claimAttendance, showAdError]);
-
   if (!loaded) {
     return (
       <SafeAreaView style={[styles.safe, styles.center]}>
@@ -137,7 +116,6 @@ export function Main({ onGoExchange }: MainProps) {
   const isCartEmpty = cartCount <= 0;
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
-  const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
   const cartYeop = sellValue(state.cart); // 손수레에 쌓인 고물의 판매가(엽전) — 실시간 증가
   const speedPct = Math.round(
     100 *
@@ -155,28 +133,20 @@ export function Main({ onGoExchange }: MainProps) {
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* 출석 — 광고 보고 1원 (하루 5회) */}
-        <SecondaryButton
-          label={COPY.main.btnAttend}
-          disabled={attendDone}
-          ad
-          onPress={handleAttend}
-          note={
-            attendDone
-              ? COPY.main.attendDone
-              : COPY.main.attendLeftFormat(ATTEND_DAILY_LIMIT - state.todayAttendCount)
-          }
-        />
-
         {/* 손수레 */}
         <View style={styles.cartCard}>
-          <View style={styles.cartStatRow}>
-            <Text style={styles.cartStat}>
-              {COPY.main.capacityLabel}  {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
-            </Text>
-            <Text style={styles.cartStat}>
-              {COPY.main.speedLabel}  {COPY.main.speedFormat(speedPct)}
-            </Text>
+          {/* 변동 값 — 최대 적재량 / 모으는 속도 (박스) */}
+          <View style={styles.statRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>{COPY.main.capacityLabel}</Text>
+              <Text style={styles.statValue}>
+                {COPY.main.capacityFormat(cartCount, CART_CAPACITY)}
+              </Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>{COPY.main.speedLabel}</Text>
+              <Text style={styles.statValue}>{COPY.main.speedFormat(speedPct)}</Text>
+            </View>
           </View>
           {state.visitStreak > 0 ? (
             <Text style={styles.streakText}>
@@ -184,8 +154,21 @@ export function Main({ onGoExchange }: MainProps) {
               {state.visitStreak >= STREAK_BONUS_DAYS ? ` · ${COPY.main.streakBonusSuffix}` : ''}
             </Text>
           ) : null}
-          <Cart fillRatio={fillRatio} size={220} />
+          <Cart fillRatio={fillRatio} size={170} />
           <Text style={styles.cartValue}>{COPY.main.cartValueFormat(cartYeop)}</Text>
+
+          {/* 쌓인 고물 4종 내역 */}
+          <View style={styles.gomulRow}>
+            {GOMUL_TYPES.map((t) => (
+              <View key={t} style={styles.gomulItem}>
+                <Text style={styles.gomulEmoji}>{GOMUL_INFO[t].emoji}</Text>
+                <Text style={styles.gomulCount}>{state.cart[t]}</Text>
+                <Text style={styles.gomulLabel}>{GOMUL_INFO[t].label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* 광고 보고 추가로 고물 모으기 */}
           <PrimaryButton
             label={COPY.main.btnPickUp}
             disabled={isCartFull}
@@ -195,15 +178,7 @@ export function Main({ onGoExchange }: MainProps) {
           />
         </View>
 
-        {/* 엽전 */}
-        <View style={styles.yeopBox}>
-          <Text style={styles.yeopLabel}>{COPY.main.yeopLabel}</Text>
-          <Text style={styles.yeopValue}>
-            {state.yeopjeon.toLocaleString()} {COPY.main.yeopUnit}
-          </Text>
-        </View>
-
-        {/* 빠르게 모으기 / 창고로 옮기기 */}
+        {/* 빠르게 모으기 (부스터) */}
         {isBoosterActive ? (
           <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
         ) : (
@@ -215,6 +190,7 @@ export function Main({ onGoExchange }: MainProps) {
           />
         )}
 
+        {/* 고물 판매하기 → 엽전 */}
         <PrimaryButton
           label={COPY.main.btnSell}
           disabled={isCartEmpty}
@@ -222,6 +198,14 @@ export function Main({ onGoExchange }: MainProps) {
           onPress={handleSell}
           note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.btnNoteAd}
         />
+
+        {/* 엽전 잔액 */}
+        <View style={styles.yeopBox}>
+          <Text style={styles.yeopLabel}>{COPY.main.yeopLabel}</Text>
+          <Text style={styles.yeopValue}>
+            {state.yeopjeon.toLocaleString()} {COPY.main.yeopUnit}
+          </Text>
+        </View>
 
         <Pressable
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
@@ -335,16 +319,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  cartStatRow: {
+  statRow: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 4,
+    gap: 10,
   },
-  cartStat: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
+  statBox: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8DDCB',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    gap: 3,
+  },
+  statLabel: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
+  statValue: { fontSize: 18, color: COLORS.text, fontWeight: '800' },
   streakText: { fontSize: 13, color: COLORS.redBerryShade, fontWeight: '700' },
   cartValue: { fontSize: 22, fontWeight: '800', color: COLORS.redBerryShade },
+  gomulRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 4,
+  },
+  gomulItem: { alignItems: 'center', gap: 2 },
+  gomulEmoji: { fontSize: 24 },
+  gomulCount: { fontSize: 16, fontWeight: '800', color: COLORS.text },
+  gomulLabel: { fontSize: 11, color: COLORS.textMuted },
   yeopBox: { width: '100%', alignItems: 'center', gap: 2 },
   yeopLabel: { fontSize: 13, color: COLORS.textMuted },
   yeopValue: { fontSize: 26, fontWeight: '800', color: COLORS.redBerryShade },

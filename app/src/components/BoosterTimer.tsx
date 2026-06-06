@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
-import { Sun } from './icons/Sun';
+import { Bolt } from './icons/Bolt';
 
 interface BoosterTimerProps {
   endTimeMs: number;
@@ -35,7 +35,7 @@ export function BoosterTimer({ endTimeMs, onEnd }: BoosterTimerProps) {
 
   return (
     <View style={styles.wrap}>
-      <Sun size={22} />
+      <Bolt size={22} />
       <Text style={styles.text}>{`${COPY.main.boosterPrefix} ${formatRemain(endTimeMs - now)}`}</Text>
     </View>
   );
