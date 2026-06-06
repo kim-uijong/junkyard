@@ -159,6 +159,7 @@ export function Main({ onGoExchange }: MainProps) {
         <SecondaryButton
           label={COPY.main.btnAttend}
           disabled={attendDone}
+          ad
           onPress={handleAttend}
           note={
             attendDone
@@ -188,6 +189,7 @@ export function Main({ onGoExchange }: MainProps) {
           <PrimaryButton
             label={COPY.main.btnPickUp}
             disabled={isCartFull}
+            ad
             onPress={handlePickUp}
             note={isCartFull ? COPY.main.cartFullNote : COPY.main.btnNoteAd}
           />
@@ -207,6 +209,7 @@ export function Main({ onGoExchange }: MainProps) {
         ) : (
           <SecondaryButton
             label={COPY.main.btnBooster}
+            ad
             onPress={handleBoosterPress}
             note={COPY.main.btnNoteBoosterDuration}
           />
@@ -215,6 +218,7 @@ export function Main({ onGoExchange }: MainProps) {
         <PrimaryButton
           label={COPY.main.btnSell}
           disabled={isCartEmpty}
+          ad
           onPress={handleSell}
           note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.btnNoteAd}
         />
@@ -252,10 +256,20 @@ interface ButtonProps {
   label: string;
   note?: string;
   disabled?: boolean;
+  ad?: boolean; // 광고 시청이 필요한 버튼이면 작은 AD 배지 표시
   onPress?: () => void;
 }
 
-function PrimaryButton({ label, note, disabled, onPress }: ButtonProps) {
+// 광고 시청이 필요함을 알리는 작은 배지
+function AdBadge() {
+  return (
+    <View style={styles.adBadge}>
+      <Text style={styles.adBadgeText}>AD</Text>
+    </View>
+  );
+}
+
+function PrimaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
   return (
     <View style={styles.btnBlock}>
       <Pressable
@@ -268,13 +282,14 @@ function PrimaryButton({ label, note, disabled, onPress }: ButtonProps) {
         ]}
       >
         <Text style={styles.primaryBtnText}>{label}</Text>
+        {ad ? <AdBadge /> : null}
       </Pressable>
       {note ? <Text style={styles.btnNote}>{note}</Text> : null}
     </View>
   );
 }
 
-function SecondaryButton({ label, note, disabled, onPress }: ButtonProps) {
+function SecondaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
   return (
     <View style={styles.btnBlock}>
       <Pressable
@@ -287,6 +302,7 @@ function SecondaryButton({ label, note, disabled, onPress }: ButtonProps) {
         ]}
       >
         <Text style={styles.secondaryBtnText}>{label}</Text>
+        {ad ? <AdBadge /> : null}
       </Pressable>
       {note ? <Text style={styles.btnNote}>{note}</Text> : null}
     </View>
@@ -355,6 +371,16 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   secondaryBtnText: { color: COLORS.iconSun, fontSize: 16, fontWeight: '700' },
+  adBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  adBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   btnNote: { fontSize: 12, color: COLORS.textMuted },
   btnDisabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
