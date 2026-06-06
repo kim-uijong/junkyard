@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { GOMUL_INFO, GOMUL_TYPES } from '../constants/gomul';
@@ -47,6 +47,14 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
             <View style={styles.noticeBox}>
               <Text style={styles.notice}>{COPY.guide.notice}</Text>
             </View>
+
+            <Pressable
+              style={({ pressed }) => [styles.privacyLink, pressed && { opacity: 0.6 }]}
+              onPress={() => Linking.openURL(COPY.menu.privacyUrl)}
+              hitSlop={8}
+            >
+              <Text style={styles.privacyText}>{COPY.menu.privacy} ›</Text>
+            </Pressable>
           </ScrollView>
         </Pressable>
       </Pressable>
@@ -99,4 +107,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.seedYellow,
   },
   notice: { fontSize: 14, fontWeight: '600', color: COLORS.redBerryShade, textAlign: 'center' },
+  privacyLink: { alignItems: 'center', paddingVertical: 6 },
+  privacyText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600', textDecorationLine: 'underline' },
 });

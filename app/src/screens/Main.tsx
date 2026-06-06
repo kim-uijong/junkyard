@@ -22,6 +22,8 @@ import { AD_IDS } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import {
+  ATTEND_DAILY_LIMIT,
+  ATTEND_WON,
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
   GOMUL_TYPES,
@@ -34,7 +36,11 @@ import { useAds } from '../hooks/AdsContext';
 import { useIdleGrowth } from '../hooks/useIdleGrowth';
 import { useUserStateContext } from '../hooks/UserStateContext';
 import { AdCooldownError } from '../utils/ads';
+import { grantPromotion } from '../utils/promotion';
+import { promotionErrorMessage } from '../utils/promotionErrors';
 import { getServerTimeWithFallback } from '../utils/timeUtils';
+
+const PROMO_ATTEND = 'GOMUL_DAILY';
 
 interface MainProps {
   onGoExchange?: () => void;
@@ -48,6 +54,7 @@ export function Main({ onGoExchange }: MainProps) {
     sellCart,
     applyIdle,
     activateBooster,
+    claimAttendance,
     markIntroSeen,
   } = useUserStateContext();
   const { playInterstitial } = useAds();
@@ -99,6 +106,22 @@ export function Main({ onGoExchange }: MainProps) {
     applyIdle(now);
   }, [applyIdle]);
 
+  const handleAttend = useCallback(async () => {
+    if (state.todayAttendCount >= ATTEND_DAILY_LIMIT) return;
+    try {
+      await playInterstitial(AD_IDS.interstitial, 'small');
+      const result = await grantPromotion({ promotionCode: PROMO_ATTEND, amount: ATTEND_WON });
+      if ('key' in result) {
+        claimAttendance();
+      } else {
+        const { message } = promotionErrorMessage(result.errorCode);
+        Alert.alert(COPY.main.adErrorTitle, message);
+      }
+    } catch (e) {
+      showAdError(e);
+    }
+  }, [state.todayAttendCount, playInterstitial, claimAttendance, showAdError]);
+
   if (!loaded) {
     return (
       <SafeAreaView style={[styles.safe, styles.center]}>
@@ -112,6 +135,7 @@ export function Main({ onGoExchange }: MainProps) {
   const isCartEmpty = cartCount <= 0;
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
+  const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
   const cartYeop = sellValue(state.cart); // 손수레에 쌓인 고물의 판매가(엽전) — 실시간 증가
   const speedPct = Math.round(
     100 *
@@ -133,7 +157,7 @@ export function Main({ onGoExchange }: MainProps) {
             </View>
           )}
 
-          <Cart fillRatio={fillRatio} size={132} />
+          <Cart fillRatio={fillRatio} size={120} />
 
           {/* 추가로 고물 모으기 — 수레 바로 밑(작게) */}
           <ActionButton
@@ -166,7 +190,7 @@ export function Main({ onGoExchange }: MainProps) {
           <View style={styles.gomulRow}>
             {GOMUL_TYPES.map((t) => (
               <View key={t} style={styles.gomulItem}>
-                <GomulIcon type={t} size={28} />
+                <GomulIcon type={t} size={26} />
                 <Text style={styles.gomulCount}>{state.cart[t]}</Text>
               </View>
             ))}
@@ -218,12 +242,29 @@ export function Main({ onGoExchange }: MainProps) {
           </Pressable>
         </View>
 
-        {/* 안내 */}
+        {/* 출석 — 광고 보고 1원 (하루 5회) */}
+        <ActionButton
+          icon="🎁"
+          label={COPY.main.btnAttend}
+          tone="outline"
+          compact
+          ad
+          disabled={attendDone}
+          onPress={handleAttend}
+          note={
+            attendDone
+              ? COPY.main.attendDone
+              : COPY.main.attendLeftFormat(ATTEND_DAILY_LIMIT - state.todayAttendCount)
+          }
+        />
+
+        {/* 안내 (작은 링크) */}
         <Pressable
-          style={({ pressed }) => [styles.guideChip, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.guideLink, pressed && styles.pressed]}
           onPress={() => setGuideOpen(true)}
+          hitSlop={8}
         >
-          <Text style={styles.chipText}>ⓘ  {COPY.main.guideLink}</Text>
+          <Text style={styles.guideLinkText}>ⓘ {COPY.main.guideLink}</Text>
         </Pressable>
       </ScrollView>
 
@@ -301,7 +342,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 16, alignItems: 'center', gap: 10 },
+  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 14, alignItems: 'center', gap: 8 },
 
   cardShadow: {
     shadowColor: '#5A4A3A',
@@ -316,7 +357,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -343,10 +384,10 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
 
   progressWrap: { width: '100%', alignItems: 'center', gap: 5 },
@@ -369,7 +410,7 @@ const styles = StyleSheet.create({
   speedChip: {
     backgroundColor: '#FFF6E0',
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 6,
     borderRadius: 999,
   },
   speedChipText: { fontSize: 14, color: '#B07A12', fontWeight: '800' },
@@ -412,15 +453,7 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.85 },
 
-  // 안내 칩
-  guideChip: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E4D9C8',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    marginTop: 2,
-  },
-  chipText: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
+  // 안내 (작은 링크)
+  guideLink: { paddingVertical: 4, paddingHorizontal: 12 },
+  guideLinkText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
 });
