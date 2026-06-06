@@ -122,28 +122,6 @@ export function Main({ onGoExchange }: MainProps) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* 내 엽전 + 토스 포인트로 받기 */}
-        <View style={[styles.balanceCard, styles.cardShadow]}>
-          <View style={styles.balanceLeft}>
-            <CoinIcon size={34} />
-            <View>
-              <Text style={styles.balanceLabel}>{COPY.main.balanceLabel}</Text>
-              <Text style={styles.balanceValue}>
-                {state.yeopjeon.toLocaleString()}
-                <Text style={styles.balanceUnit}> {COPY.main.yeopUnit}</Text>
-              </Text>
-            </View>
-          </View>
-          <Pressable
-            onPress={onGoExchange}
-            style={({ pressed }) => [styles.cashOutBtn, pressed && styles.pressed]}
-            hitSlop={6}
-          >
-            <Text style={styles.cashOutText}>{COPY.main.cashOutBtn}</Text>
-            <Text style={styles.cashOutArrow}>›</Text>
-          </Pressable>
-        </View>
-
         {/* 손수레 카드 */}
         <View style={[styles.cartCard, styles.cardShadow]}>
           {/* 모으는 속도 / 부스터 진행 (맨 위) */}
@@ -216,6 +194,28 @@ export function Main({ onGoExchange }: MainProps) {
             style={styles.flex1}
             onPress={handleSell}
           />
+        </View>
+
+        {/* 내 엽전 + 토스 포인트로 받기 */}
+        <View style={[styles.balanceCard, styles.cardShadow]}>
+          <View style={styles.balanceLeft}>
+            <CoinIcon size={34} />
+            <View>
+              <Text style={styles.balanceLabel}>{COPY.main.balanceLabel}</Text>
+              <Text style={styles.balanceValue}>
+                {state.yeopjeon.toLocaleString()}
+                <Text style={styles.balanceUnit}> {COPY.main.yeopUnit}</Text>
+              </Text>
+            </View>
+          </View>
+          <Pressable
+            onPress={onGoExchange}
+            style={({ pressed }) => [styles.cashOutBtn, pressed && styles.pressed]}
+            hitSlop={6}
+          >
+            <Text style={styles.cashOutText}>{COPY.main.cashOutBtn}</Text>
+            <Text style={styles.cashOutArrow}>›</Text>
+          </Pressable>
         </View>
 
         {/* 안내 */}

@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { GOMUL_INFO, GOMUL_TYPES } from '../constants/gomul';
+import { GomulIcon } from './GomulIcon';
 
 interface InfoModalProps {
   visible: boolean;
@@ -24,9 +25,12 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
           <ScrollView contentContainerStyle={styles.content}>
             <Section title={COPY.guide.gomulTitle}>
               {GOMUL_TYPES.map((t) => (
-                <Text key={t} style={styles.line}>
-                  {COPY.guide.gomulLineFormat(GOMUL_INFO[t].emoji, GOMUL_INFO[t].label, GOMUL_INFO[t].price)}
-                </Text>
+                <View key={t} style={styles.gomulLine}>
+                  <GomulIcon type={t} size={24} />
+                  <Text style={styles.line}>
+                    {COPY.guide.gomulLineFormat(GOMUL_INFO[t].label, GOMUL_INFO[t].price)}
+                  </Text>
+                </View>
               ))}
             </Section>
 
@@ -84,6 +88,7 @@ const styles = StyleSheet.create({
   section: { gap: 8 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
   sectionBody: { gap: 6 },
+  gomulLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   line: { fontSize: 14, color: COLORS.text, lineHeight: 20 },
   noticeBox: {
     backgroundColor: '#FFF6E0',
