@@ -12,6 +12,7 @@ import {
 import { BannerAd } from '../components/BannerAd';
 import { BoosterTimer } from '../components/BoosterTimer';
 import { Cart } from '../components/Cart';
+import { GomulIcon } from '../components/GomulIcon';
 import { InfoModal } from '../components/InfoModal';
 import { IntroOverlay } from '../components/IntroOverlay';
 import { MenuModal } from '../components/MenuModal';
@@ -21,7 +22,6 @@ import { COPY } from '../constants/copy';
 import {
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
-  GOMUL_INFO,
   GOMUL_TYPES,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
@@ -125,13 +125,6 @@ export function Main({ onGoExchange }: MainProps) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{COPY.main.headerTitle}</Text>
-        <Pressable onPress={() => setMenuOpen(true)} hitSlop={8}>
-          <Text style={styles.menuBtn}>{COPY.main.menuLabel}</Text>
-        </Pressable>
-      </View>
-
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* 손수레 */}
         <View style={styles.cartCard}>
@@ -161,9 +154,8 @@ export function Main({ onGoExchange }: MainProps) {
           <View style={styles.gomulRow}>
             {GOMUL_TYPES.map((t) => (
               <View key={t} style={styles.gomulItem}>
-                <Text style={styles.gomulEmoji}>{GOMUL_INFO[t].emoji}</Text>
+                <GomulIcon type={t} size={28} />
                 <Text style={styles.gomulCount}>{state.cart[t]}</Text>
-                <Text style={styles.gomulLabel}>{GOMUL_INFO[t].label}</Text>
               </View>
             ))}
           </View>
@@ -219,6 +211,13 @@ export function Main({ onGoExchange }: MainProps) {
           onPress={() => setGuideOpen(true)}
         >
           <Text style={styles.linkText}>{COPY.main.guideLink}</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          onPress={() => setMenuOpen(true)}
+        >
+          <Text style={styles.linkText}>{COPY.main.menuLabel}</Text>
         </Pressable>
       </ScrollView>
 
@@ -296,18 +295,6 @@ function SecondaryButton({ label, note, disabled, ad, onPress }: ButtonProps) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8DDCB',
-    backgroundColor: COLORS.bg,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
-  menuBtn: { fontSize: 14, color: COLORS.text, fontWeight: '500' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32, alignItems: 'center', gap: 16 },
   cartCard: {
@@ -345,10 +332,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 4,
   },
-  gomulItem: { alignItems: 'center', gap: 2 },
-  gomulEmoji: { fontSize: 24 },
+  gomulItem: { alignItems: 'center', gap: 3 },
   gomulCount: { fontSize: 16, fontWeight: '800', color: COLORS.text },
-  gomulLabel: { fontSize: 11, color: COLORS.textMuted },
   yeopBox: { width: '100%', alignItems: 'center', gap: 2 },
   yeopLabel: { fontSize: 13, color: COLORS.textMuted },
   yeopValue: { fontSize: 26, fontWeight: '800', color: COLORS.redBerryShade },
