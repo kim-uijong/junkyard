@@ -52,7 +52,7 @@ export const COPY = {
     back: '← 메인',
     yeopBalanceFormat: (n: number) => `보유 엽전  ${n.toLocaleString()}냥`,
     exchangeSection: '토스 포인트로 받기',
-    exchangeNote: '130냥 = 1원 · 하루 15원까지 받을 수 있어요',
+    exchangeNote: '100냥 = 1원 · 하루 1,000원까지 받을 수 있어요',
     btnExchangeFormat: (won: number) => `${won}원 받기`,
     noExchangeable: '교환할 엽전이 부족해요',
     dailyCapReached: '오늘 받을 수 있는 한도를 다 채웠어요',
@@ -103,7 +103,7 @@ export const COPY = {
     howActive: '광고로 줍거나 빠르게 모으면 고철 같은 비싼 고물이 잘 나와요.',
     howMove: "손수레가 차면 '고물 팔기'를 눌러 엽전을 받아요.",
     exchangeTitle: '엽전 교환',
-    exchangeBody: '모은 엽전은 토스 포인트로 바꿔요. 130냥 = 1원, 하루 15원까지 받을 수 있어요.',
+    exchangeBody: '모은 엽전은 토스 포인트로 바꿔요. 100냥 = 1원, 하루 1,000원까지 받을 수 있어요.',
     notice: '주운 고물은 언제나 값이 나가요! 빈손은 없어요.',
   },
 
