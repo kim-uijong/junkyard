@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -27,6 +27,8 @@ import {
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
   GOMUL_TYPES,
+  IDLE_DAILY_CAP_YEOP,
+  IDLE_MS_PER_ITEM,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
   sellValue,
@@ -60,6 +62,12 @@ export function Main({ onGoExchange }: MainProps) {
   useIdleGrowth(applyIdle, loaded);
 
   const [guideOpen, setGuideOpen] = useState(false);
+  // 1초 틱 — '다음 고물까지' 진행바 애니메이션용(표시 전용, 실제 적립은 서버시각 기준).
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
   const showIntro = loaded && state.isFirstLaunch;
 
   const handleIntroDone = useCallback(() => {
@@ -134,6 +142,15 @@ export function Main({ onGoExchange }: MainProps) {
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
   const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
+  // 다음 고물 1개까지 진행도(부스터 반영). 손수레 가득/일일 자동수집 상한 시 멈춤 상태 표시.
+  const idleCapReached = state.todayIdleYeop >= IDLE_DAILY_CAP_YEOP;
+  let nextItemPct = 0;
+  if (state.lastUpdateTime > 0) {
+    const elapsed = Math.max(0, nowTick - state.lastUpdateTime);
+    const boosted = Math.max(0, Math.min(state.boosterEndTime, nowTick) - state.lastUpdateTime);
+    const effElapsed = elapsed - boosted + boosted * BOOSTER_MULTIPLIER;
+    nextItemPct = Math.min(100, Math.round((effElapsed / IDLE_MS_PER_ITEM) * 100));
+  }
   const cartYeop = sellValue(state.cart); // 손수레에 쌓인 고물의 판매가(엽전) — 실시간 증가
   const speedPct = Math.round(
     100 *
@@ -165,7 +182,35 @@ export function Main({ onGoExchange }: MainProps) {
             note={isCartFull ? COPY.main.cartFullNote : undefined}
           />
 
-          {/* 적재량 진행 막대 */}
+          {/* 다음 고물 1개까지 — 얇은 황금 바(부스터 시 쭉쭉 참) */}
+          <View style={styles.nextWrap}>
+            <View style={styles.nextRow}>
+              <Text style={styles.nextLabel}>
+                {isCartFull
+                  ? COPY.main.nextItemFull
+                  : idleCapReached
+                    ? COPY.main.nextItemDone
+                    : COPY.main.nextItemLabel}
+              </Text>
+              {!isCartFull && !idleCapReached ? (
+                <Text style={styles.nextPct}>
+                  {isBoosterActive ? '⚡ ' : ''}
+                  {nextItemPct}%
+                </Text>
+              ) : null}
+            </View>
+            <View style={styles.nextTrack}>
+              <View
+                style={[
+                  styles.nextFill,
+                  { width: `${isCartFull || idleCapReached ? 100 : nextItemPct}%` },
+                  (isCartFull || idleCapReached) && styles.nextFillMuted,
+                ]}
+              />
+            </View>
+          </View>
+
+          {/* 손수레 적재량 — 두꺼운 주황 바(전체 용량 대비) */}
           <View style={styles.progressWrap}>
             <View style={styles.progressTrack}>
               <View
@@ -393,6 +438,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+
+  // 다음 고물 1개까지 (얇은 황금 바)
+  nextWrap: { width: '100%', gap: 4 },
+  nextRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  nextLabel: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600' },
+  nextPct: { fontSize: 12, color: '#B07A12', fontWeight: '800' },
+  nextTrack: { width: '100%', height: 7, borderRadius: 999, backgroundColor: '#EFE7DA', overflow: 'hidden' },
+  nextFill: { height: '100%', borderRadius: 999, backgroundColor: COLORS.iconSun },
+  nextFillMuted: { backgroundColor: '#D9C9A8' },
 
   progressWrap: { width: '100%', alignItems: 'center', gap: 5 },
   progressTrack: {
