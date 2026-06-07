@@ -8,7 +8,7 @@ import { COPY } from '../constants/copy';
 // USE_REAL_BANNER=true (Phase 5b 라이브 베타): 실제 InlineAd 렌더.
 // 토스 5.241.0 미만 사용자(R-06)는 InlineAd가 렌더되지 않을 수 있어 placeholder가 자연스러운 fallback이 됨.
 
-const USE_REAL_BANNER = false;
+const USE_REAL_BANNER = true;
 
 interface BannerAdProps {
   adGroupId: string;

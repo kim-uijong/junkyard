@@ -4,7 +4,7 @@ import { grantPromotionReward } from '@apps-in-toss/framework';
 // USE_MOCK=true (Phase 4~6 코드 작업): 항상 성공 반환.
 // USE_MOCK=false (Phase 6 콘솔 프로모션 발급 후): 실제 grantPromotionReward 호출.
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 const MOCK_DELAY_MS = 600;
 
 export type GrantResult = { key: string } | { errorCode: string | undefined };

@@ -5,7 +5,7 @@ import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/framework';
 // USE_MOCK=false (Phase 5b 라이브 베타 배포 시): 실제 loadFullScreenAd + showFullScreenAd.
 // R-10 인터벌 가드: MIN_INTERVAL_MS 미만 간격 호출 시 AdCooldownError.
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 const MOCK_DELAY_MS = 1500;
 export const MIN_INTERVAL_MS = 5000;
 
