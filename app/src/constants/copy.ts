@@ -16,7 +16,7 @@ export const COPY = {
     headerTitle: '나만의고물상',
     menuLabel: '메뉴',
     cartTitle: '손수레',
-    capacityLabel: '최대 적재량',
+    capacityLabel: '줍기 진행도',
     speedLabel: '모으는 속도',
     capacityFormat: (n: number, max: number) => `${n} / ${max}개`,
     speedFormat: (pct: number) => `${pct.toLocaleString()}%`,
