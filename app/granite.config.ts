@@ -22,8 +22,8 @@ export default defineConfig({
         // ⚠️ 콘솔 '앱 정보 등록'에 제출된 이름과 정확히 일치해야 함
         displayName: '나만의고물상',
         primaryColor: '#C46A2B',
-        // TODO: 실제 아이콘 PNG를 호스팅 후 URL 교체 (현재 placeholder)
-        icon: 'https://raw.githubusercontent.com/kim-uijong/gomulsang-asset/main/icon.png',
+        // 앱 아이콘(600x600) — junkyard repo img/ 호스팅. ?v 는 캐시 갱신용(아이콘 교체 시 숫자 +1).
+        icon: 'https://raw.githubusercontent.com/kim-uijong/junkyard/main/img/junkyard_logo.png?v=600',
       },
       permissions: [],
     }),
