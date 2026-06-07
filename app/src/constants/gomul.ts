@@ -17,8 +17,9 @@ export const GOMUL_INFO: Record<GomulType, GomulInfo> = {
   special: { label: '금덩이', emoji: '🪙', price: 100 },
 };
 
-// 확률 가중치 — 방치(idle)는 싼 고물↑, 활동(광고 줍기)은 비싼 고물↑.
-export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 70, bottle: 22, scrap: 7, special: 1 };
+// 확률 가중치 — 방치(idle)는 싼 고물(폐지) 위주, 활동(광고 줍기)은 비싼 고물↑.
+// 방치 EV를 낮춰(≈1.55냥/개) 손수레 가득(120개)=약 186냥<일일상한 200냥 → 방치만으로도 가득 채울 수 있게.
+export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 90, bottle: 9, scrap: 1, special: 0 };
 export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 25, bottle: 35, scrap: 35, special: 5 };
 
 export const CART_CAPACITY = 120;   // 손수레 최대 적재(개)
@@ -37,15 +38,15 @@ export const ATTEND_WON = 1;
 export const STREAK_BONUS_DAYS = 7;
 export const STREAK_BONUS_MULT = 1.1;
 
-// 방치 수집 속도: 60초당 고물 1개(체감용). 오프라인 누적 캡 8시간.
-export const IDLE_MS_PER_ITEM = 60 * 1000;
+// 방치 수집 속도: 4분당 고물 1개 → 손수레(120개)가 8시간이면 가득. 오프라인 누적 캡도 8시간.
+export const IDLE_MS_PER_ITEM = 4 * 60 * 1000;
 export const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
 
 // 방치 일일 적립 상한(냥). BM 핵심 — 방치는 '안심용 장식', 의미 있는 적립은 광고로만.
 // 상한이 있으면 방치 속도는 '얼마나 빨리 상한까지 차느냐'만 결정. (무임승차 차단)
 export const IDLE_DAILY_CAP_YEOP = 200; // = 2원/일 (100냥=1원)
-// 방치 분포 기대값(냥/개) — 일일 상한을 개수로 환산할 때 사용. 폐지70/공병22/고철7/금덩이1 → 4.2
-export const IDLE_AVG_YEOP = 4.2;
+// 방치 분포 기대값(냥/개) — 일일 상한을 개수로 환산할 때 사용. 폐지90/공병9/고철1/금덩이0 → 1.55
+export const IDLE_AVG_YEOP = 1.55;
 
 // 빠르게 모으기(부스터): 일정 시간 수집 속도 25배.
 export const BOOSTER_MULTIPLIER = 25;

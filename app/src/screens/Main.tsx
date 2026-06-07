@@ -155,7 +155,7 @@ export function Main({ onGoExchange }: MainProps) {
             </View>
           )}
 
-          <Cart fillRatio={fillRatio} size={120} />
+          <Cart fillRatio={fillRatio} size={108} />
 
           {/* 추가로 고물 모으기 — 수레 바로 밑(작게) */}
           <ActionButton
@@ -202,8 +202,10 @@ export function Main({ onGoExchange }: MainProps) {
               icon="⚡"
               label={COPY.main.btnBooster}
               tone="outline"
+              compact
               ad
               style={styles.flex1}
+              note={COPY.main.boosterNoteFormat(BOOSTER_MULTIPLIER * 100)}
               onPress={handleBoosterPress}
             />
           ) : null}
@@ -211,9 +213,11 @@ export function Main({ onGoExchange }: MainProps) {
             icon="💰"
             label={COPY.main.btnSell}
             tone="gold"
+            compact
             ad
             disabled={isCartEmpty}
             style={styles.flex1}
+            note={isCartEmpty ? COPY.main.cartEmptyNote : COPY.main.sellNote}
             onPress={handleSell}
           />
         </View>
@@ -340,7 +344,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 14, alignItems: 'center', gap: 8 },
+  content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12, alignItems: 'center', gap: 7 },
 
   cardShadow: {
     shadowColor: '#5A4A3A',
@@ -355,7 +359,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,10 +386,10 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
 
   progressWrap: { width: '100%', alignItems: 'center', gap: 5 },
@@ -416,7 +420,7 @@ const styles = StyleSheet.create({
   // 액션 버튼
   actionRow: { width: '100%', flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   flex1: { flex: 1 },
-  btnBlock: { width: '100%', alignItems: 'center', gap: 5 },
+  btnBlock: { width: '100%', alignItems: 'center', gap: 3 },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -427,7 +431,7 @@ const styles = StyleSheet.create({
     width: '100%',
     minHeight: 54,
   },
-  actionBtnCompact: { paddingVertical: 10, minHeight: 42, borderRadius: 12 },
+  actionBtnCompact: { paddingVertical: 9, minHeight: 40, borderRadius: 12 },
   brandBtn: { backgroundColor: COLORS.redBerry },
   goldBtn: { backgroundColor: COLORS.seedYellow },
   outlineBtn: { backgroundColor: '#FFFFFF', borderWidth: 2, borderColor: COLORS.redBerry },

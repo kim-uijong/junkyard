@@ -21,7 +21,7 @@ describe('pickGomul — 가중치 분포', () => {
       expect(Math.abs(actual - expected)).toBeLessThan(0.02);
     }
   }
-  it('방치 분포가 70/22/7/1에 근접해야 한다', () => ratios(IDLE_WEIGHTS));
+  it('방치 분포가 90/9/1/0에 근접해야 한다', () => ratios(IDLE_WEIGHTS));
   it('활동 분포가 25/35/35/5에 근접해야 한다', () => ratios(ACTIVE_WEIGHTS));
 });
 
@@ -65,8 +65,8 @@ describe('활동 인센티브 — 광고로 줍는 게 더 값짐', () => {
     }
     const idleAvg = idle / N;
     const activeAvg = active / N;
-    expect(idleAvg).toBeGreaterThan(3.5); // ≈4.2
-    expect(idleAvg).toBeLessThan(5);
+    expect(idleAvg).toBeGreaterThan(1.2); // ≈1.55
+    expect(idleAvg).toBeLessThan(2);
     expect(activeAvg).toBeGreaterThan(11); // ≈14.0
     expect(activeAvg).toBeGreaterThan(idleAvg * 2.5);
   });
