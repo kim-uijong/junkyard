@@ -20,7 +20,6 @@ export const COPY = {
     speedLabel: '모으는 속도',
     nextItemLabel: '다음 고물까지',
     nextItemFull: '손수레가 가득 찼어요',
-    nextItemDone: '오늘 자동 수집 완료',
     capacityFormat: (n: number, max: number) => `${n} / ${max}개`,
     speedFormat: (pct: number) => `${pct.toLocaleString()}%`,
     cartValueFormat: (yeop: number) => `수레에 있는 고물 ${yeop.toLocaleString()}냥`,

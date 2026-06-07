@@ -27,7 +27,6 @@ import {
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
   GOMUL_TYPES,
-  IDLE_DAILY_CAP_YEOP,
   IDLE_MS_PER_ITEM,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
@@ -142,8 +141,7 @@ export function Main({ onGoExchange }: MainProps) {
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
   const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
-  // 다음 고물 1개까지 진행도(부스터 반영). 손수레 가득/일일 자동수집 상한 시 멈춤 상태 표시.
-  const idleCapReached = state.todayIdleYeop >= IDLE_DAILY_CAP_YEOP;
+  // 다음 고물 1개까지 진행도(부스터 반영). 손수레 가득 시 멈춤 상태 표시.
   let nextItemPct = 0;
   if (state.lastUpdateTime > 0) {
     const elapsed = Math.max(0, nowTick - state.lastUpdateTime);
@@ -186,13 +184,9 @@ export function Main({ onGoExchange }: MainProps) {
           <View style={styles.nextWrap}>
             <View style={styles.nextRow}>
               <Text style={styles.nextLabel}>
-                {isCartFull
-                  ? COPY.main.nextItemFull
-                  : idleCapReached
-                    ? COPY.main.nextItemDone
-                    : COPY.main.nextItemLabel}
+                {isCartFull ? COPY.main.nextItemFull : COPY.main.nextItemLabel}
               </Text>
-              {!isCartFull && !idleCapReached ? (
+              {!isCartFull ? (
                 <Text style={styles.nextPct}>
                   {isBoosterActive ? '⚡ ' : ''}
                   {nextItemPct}%
@@ -203,8 +197,8 @@ export function Main({ onGoExchange }: MainProps) {
               <View
                 style={[
                   styles.nextFill,
-                  { width: `${isCartFull || idleCapReached ? 100 : nextItemPct}%` },
-                  (isCartFull || idleCapReached) && styles.nextFillMuted,
+                  { width: `${isCartFull ? 100 : nextItemPct}%` },
+                  isCartFull && styles.nextFillMuted,
                 ]}
               />
             </View>
