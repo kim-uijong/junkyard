@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { BannerAd } from '../components/BannerAd';
-import { AD_IDS } from '../constants/adIds';
+import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { DAILY_EXCHANGE_CAP_WON, LIFETIME_CAP_WON, YEOP_PER_WON } from '../constants/gomul';
@@ -19,8 +19,6 @@ import { useUserStateContext } from '../hooks/UserStateContext';
 import { AdCooldownError } from '../utils/ads';
 import { grantPromotion } from '../utils/promotion';
 import { promotionErrorMessage } from '../utils/promotionErrors';
-
-const PROMO_CODE = 'GOMUL_REWARD';
 
 interface ExchangeProps {
   onBack?: () => void;
@@ -47,7 +45,7 @@ export function Exchange({ onBack }: ExchangeProps) {
     setPending(true);
     try {
       await playInterstitial(AD_IDS.interstitial, 'full');
-      const result = await grantPromotion({ promotionCode: PROMO_CODE, amount: exchangeableWon });
+      const result = await grantPromotion({ promotionCode: PROMO_CODES.reward, amount: exchangeableWon });
       if ('key' in result) {
         commitExchange(exchangeableWon);
         Alert.alert(COPY.exchange.successTitle, COPY.exchange.successMessageFormat(exchangeableWon));

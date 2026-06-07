@@ -18,7 +18,7 @@ import { CoinIcon } from '../components/CoinIcon';
 import { GomulIcon } from '../components/GomulIcon';
 import { InfoModal } from '../components/InfoModal';
 import { IntroOverlay } from '../components/IntroOverlay';
-import { AD_IDS } from '../constants/adIds';
+import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import {
@@ -39,8 +39,6 @@ import { AdCooldownError } from '../utils/ads';
 import { grantPromotion } from '../utils/promotion';
 import { promotionErrorMessage } from '../utils/promotionErrors';
 import { getServerTimeWithFallback } from '../utils/timeUtils';
-
-const PROMO_ATTEND = 'GOMUL_DAILY';
 
 interface MainProps {
   onGoExchange?: () => void;
@@ -110,7 +108,7 @@ export function Main({ onGoExchange }: MainProps) {
     if (state.todayAttendCount >= ATTEND_DAILY_LIMIT) return;
     try {
       await playInterstitial(AD_IDS.interstitial, 'small');
-      const result = await grantPromotion({ promotionCode: PROMO_ATTEND, amount: ATTEND_WON });
+      const result = await grantPromotion({ promotionCode: PROMO_CODES.attend, amount: ATTEND_WON });
       if ('key' in result) {
         claimAttendance();
       } else {
