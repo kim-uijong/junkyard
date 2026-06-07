@@ -1,5 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Storage } from '@apps-in-toss/framework';
 import { type GomulCounts, EMPTY_COUNTS } from '../constants/gomul';
+
+// ⚠️ AsyncStorage는 앱인토스에서 사용 불가(화이트아웃/미영속) → 앱인토스 네이티브 Storage 사용.
+// Storage.getItem/setItem/removeItem 으로 앱 재시작에도 데이터 유지.
 
 export interface UserState {
   cart: GomulCounts;          // 손수레 (방치/활동으로 쌓이는 고물)
@@ -33,7 +36,7 @@ export const DEFAULT_STATE: UserState = {
 
 export async function loadUserState(): Promise<UserState> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await Storage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_STATE };
     const parsed = JSON.parse(raw) as Partial<UserState>;
     return {
@@ -47,9 +50,9 @@ export async function loadUserState(): Promise<UserState> {
 }
 
 export async function saveUserState(state: UserState): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  await Storage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 export async function clearUserState(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await Storage.removeItem(STORAGE_KEY);
 }

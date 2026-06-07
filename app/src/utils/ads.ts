@@ -9,7 +9,8 @@ const USE_MOCK = true;
 const MOCK_DELAY_MS = 1500;
 export const MIN_INTERVAL_MS = 5000;
 
-const state = { lastPlayedAt: 0 };
+// lastPlayedAt: 인터벌 가드. inFlight: 광고 재생 중 중복 호출 차단(빠른 더블탭 이중 보상 방지).
+const state = { lastPlayedAt: 0, inFlight: false };
 
 export class AdCooldownError extends Error {
   constructor() {
@@ -26,21 +27,28 @@ export class AdFailedError extends Error {
 }
 
 export async function playInterstitial(adGroupId: string): Promise<void> {
+  // 이미 광고가 재생 중이면(더블탭 등) 즉시 차단 → 보상 함수가 두 번 호출되지 않게.
+  if (state.inFlight) throw new AdCooldownError();
   const now = Date.now();
   if (now - state.lastPlayedAt < MIN_INTERVAL_MS) throw new AdCooldownError();
 
-  if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, MOCK_DELAY_MS));
-    state.lastPlayedAt = Date.now();
-    return;
-  }
+  state.inFlight = true;
+  try {
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, MOCK_DELAY_MS));
+      state.lastPlayedAt = Date.now();
+      return;
+    }
 
-  if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
-    throw new AdFailedError('not-supported');
+    if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
+      throw new AdFailedError('not-supported');
+    }
+    await loadAdAsync(adGroupId);
+    await showAdAsync(adGroupId);
+    state.lastPlayedAt = Date.now();
+  } finally {
+    state.inFlight = false;
   }
-  await loadAdAsync(adGroupId);
-  await showAdAsync(adGroupId);
-  state.lastPlayedAt = Date.now();
 }
 
 function loadAdAsync(adGroupId: string): Promise<void> {
