@@ -28,6 +28,7 @@ import {
   CART_CAPACITY,
   GOMUL_TYPES,
   IDLE_MS_PER_ITEM,
+  ITEMS_PER_PICK,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
   sellValue,
@@ -137,6 +138,8 @@ export function Main({ onGoExchange }: MainProps) {
 
   const cartCount = totalCount(state.cart);
   const isCartFull = cartCount >= CART_CAPACITY;
+  // 줍기 한 번(5개)이 안 들어갈 만큼 빈자리가 적으면 줍기 차단 → 광고 보고 덜 받는 손해 방지
+  const pickBlocked = CART_CAPACITY - cartCount < ITEMS_PER_PICK;
   const isCartEmpty = cartCount <= 0;
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
@@ -175,9 +178,15 @@ export function Main({ onGoExchange }: MainProps) {
             tone="brand"
             compact
             ad
-            disabled={isCartFull}
+            disabled={pickBlocked}
             onPress={handlePickUp}
-            note={isCartFull ? COPY.main.cartFullNote : undefined}
+            note={
+              isCartFull
+                ? COPY.main.cartFullNote
+                : pickBlocked
+                  ? COPY.main.cartNearFullNote
+                  : undefined
+            }
           />
 
           {/* 다음 고물 1개까지 — 얇은 황금 바(부스터 시 쭉쭉 참) */}
