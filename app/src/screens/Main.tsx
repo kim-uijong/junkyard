@@ -146,14 +146,10 @@ export function Main({ onGoExchange }: MainProps) {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* 손수레 카드 */}
         <View style={[styles.cartCard, styles.cardShadow]}>
-          {/* 모으는 속도 / 부스터 진행 (맨 위) */}
-          {isBoosterActive ? (
-            <BoosterTimer endTimeMs={state.boosterEndTime} onEnd={handleBoosterEnd} />
-          ) : (
-            <View style={styles.speedChip}>
-              <Text style={styles.speedChipText}>⚡ {COPY.main.speedChipFormat(speedPct)}</Text>
-            </View>
-          )}
+          {/* 모으는 속도 (부스터 중이면 2,500%로 표시) */}
+          <View style={styles.speedChip}>
+            <Text style={styles.speedChipText}>⚡ {COPY.main.speedChipFormat(speedPct)}</Text>
+          </View>
 
           <Cart fillRatio={fillRatio} size={108} />
 
@@ -195,9 +191,15 @@ export function Main({ onGoExchange }: MainProps) {
           </View>
         </View>
 
-        {/* 빠르게 모으기 / 고물 판매하기 — 한 줄 */}
+        {/* 빠르게 모으기(활성 시 카운트다운) / 고물 판매하기 — 한 줄 */}
         <View style={styles.actionRow}>
-          {!isBoosterActive ? (
+          {isBoosterActive ? (
+            <BoosterTimer
+              endTimeMs={state.boosterEndTime}
+              onEnd={handleBoosterEnd}
+              style={styles.flex1}
+            />
+          ) : (
             <ActionButton
               icon="⚡"
               label={COPY.main.btnBooster}
@@ -208,7 +210,7 @@ export function Main({ onGoExchange }: MainProps) {
               note={COPY.main.boosterNoteFormat(BOOSTER_MULTIPLIER * 100)}
               onPress={handleBoosterPress}
             />
-          ) : null}
+          )}
           <ActionButton
             icon="💰"
             label={COPY.main.btnSell}

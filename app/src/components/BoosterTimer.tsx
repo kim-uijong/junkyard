@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { Bolt } from './icons/Bolt';
 
 interface BoosterTimerProps {
   endTimeMs: number;
   onEnd?: () => void;
+  style?: StyleProp<ViewStyle>; // 행 배치(flex1) 등
 }
 
 function formatRemain(ms: number): string {
@@ -15,7 +17,9 @@ function formatRemain(ms: number): string {
   return `${mm}:${ss}`;
 }
 
-export function BoosterTimer({ endTimeMs, onEnd }: BoosterTimerProps) {
+// 부스터 활성 중에는 '빠르게 모으기' 버튼이 사라지지 않고, 이 활성 버튼(색+남은시간)으로 바뀜.
+// 남은 시간이 0이 되면 onEnd 호출 → 다시 누를 수 있는 버튼으로 복귀.
+export function BoosterTimer({ endTimeMs, onEnd, style }: BoosterTimerProps) {
   const [now, setNow] = useState(() => Date.now());
   const firedRef = useRef(false);
 
@@ -33,24 +37,29 @@ export function BoosterTimer({ endTimeMs, onEnd }: BoosterTimerProps) {
   }, [endTimeMs, onEnd]);
 
   return (
-    <View style={styles.wrap}>
-      <Bolt size={22} />
-      <Text style={styles.text}>{`${COPY.main.boosterPrefix} ${formatRemain(endTimeMs - now)}`}</Text>
+    <View style={[styles.block, style]}>
+      <View style={styles.activeBtn}>
+        <Bolt size={15} color="#FFFFFF" />
+        <Text style={styles.time}>{formatRemain(endTimeMs - now)}</Text>
+      </View>
+      <Text style={styles.note}>{COPY.main.boosterPrefix}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  block: { width: '100%', alignItems: 'center', gap: 3 },
+  activeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFF6E0',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    alignSelf: 'center',
     justifyContent: 'center',
+    gap: 6,
+    minHeight: 40,
+    width: '100%',
+    borderRadius: 12,
+    paddingVertical: 9,
+    backgroundColor: COLORS.iconSun, // 활성 = 채워진 황금색(비활성 outline과 구분)
   },
-  text: { fontSize: 14, color: '#B07A12', fontWeight: '800' },
+  time: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 },
+  note: { fontSize: 12, color: COLORS.redBerryShade, fontWeight: '700' },
 });
