@@ -21,10 +21,11 @@ export const GOMUL_INFO: Record<GomulType, GomulInfo> = {
 // 방치는 손수레 적재량으로만 관리(일일 상한 없음). 방치 고물 EV를 아주 낮게(≈1.08냥/개) →
 // 부지런히 비워가며 채워도(하루 최대 ~3카트) 광고로 현금화하므로 마진 흑자. 고철·금덩이는 줍기에서만.
 export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 98, bottle: 2, scrap: 0, special: 0 };
-export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 25, bottle: 35, scrap: 35, special: 5 };
+// 활동(광고 줍기): 공병 위주 + 고철·금덩이도 나옴 (EV≈8.98냥). 가중치는 자동 정규화(합 99).
+export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 24, bottle: 53, scrap: 20, special: 2 };
 
 export const CART_CAPACITY = 120;   // 손수레 최대 적재(개)
-export const ITEMS_PER_PICK = 4;    // '추가로 고물 모으기' 광고 1회당 고물 수 (100냥/원 맞춰 5→4로 마진 보전)
+export const ITEMS_PER_PICK = 5;    // '추가로 고물 모으기' 광고 1회당 고물 수 (한 줌씩 → 광고 보람)
 
 // 전환 (엽전 → 토스 포인트). 100냥 = 1원 (금덩이 1개 = 1원 잭팟).
 export const YEOP_PER_WON = 100;
@@ -39,10 +40,10 @@ export const ATTEND_WON = 1;
 export const STREAK_BONUS_DAYS = 7;
 export const STREAK_BONUS_MULT = 1.1;
 
-// 방치 수집 속도: 4분당 고물 1개 → 손수레(120개)가 8시간이면 가득. 오프라인 누적 캡도 8시간.
+// 방치 수집 속도: 6분당 고물 1개 → 손수레(120개)가 12시간이면 가득. 오프라인 누적 캡도 12시간.
 // 방치는 '손수레 가득'까지만 자동으로 쌓이고, 팔아서 비우면 다시 채워짐(일일 냥 상한 없음).
-export const IDLE_MS_PER_ITEM = 4 * 60 * 1000;
-export const OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
+export const IDLE_MS_PER_ITEM = 6 * 60 * 1000;
+export const OFFLINE_CAP_MS = 12 * 60 * 60 * 1000;
 
 // 빠르게 모으기(부스터): 일정 시간 수집 속도 25배.
 export const BOOSTER_MULTIPLIER = 25;
