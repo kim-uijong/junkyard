@@ -15,6 +15,7 @@ import {
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
   YEOP_PER_WON,
+  type GomulCounts,
   sellValue,
   totalCount,
 } from '../constants/gomul';
@@ -29,12 +30,12 @@ function dateKeyKST(ms: number): string {
 export interface UseUserStateResult {
   state: UserState;
   loaded: boolean;
-  pickUp: () => void;                 // 추가로 줍기 (활동 분포)
+  pickUp: () => GomulCounts | null;   // 추가로 줍기 (활동 분포) → 주운 고물 반환
   sellCart: () => void;               // 손수레 고물 즉시 판매 → 엽전
   commitExchange: (won: number) => void; // 엽전 → 토스 지급 후 차감
   claimAttendance: () => void;        // 출석(광고 1원) 지급 후 기록
   markIntroSeen: () => void;
-  applyIdle: (now: number) => void;   // 방치 적재 + 일일 리셋
+  applyIdle: (now: number) => GomulCounts | null; // 방치 적재 + 일일 리셋 → 적재된 고물 반환
   activateBooster: (now: number, durationMs?: number) => void;
   resetForDev: () => void;
 }
@@ -86,13 +87,13 @@ export function useUserState(): UseUserStateResult {
 
     if (s.lastUpdateTime === 0) {
       setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
-      return;
+      return null;
     }
     const room = CART_CAPACITY - totalCount(s.cart);
     if (room <= 0) {
       // 손수레 가득 — 더 안 쌓임(팔아서 비우면 다시 채워짐). 기준 시각만 갱신.
       setState((p) => ({ ...p, ...dayPatch, lastUpdateTime: now }));
-      return;
+      return null;
     }
     const usedElapsed = Math.min(Math.max(0, now - s.lastUpdateTime), OFFLINE_CAP_MS);
     const windowStart = now - usedElapsed;
@@ -107,19 +108,21 @@ export function useUserState(): UseUserStateResult {
     if (items <= 0) {
       // 아직 1개를 못 채움 → lastUpdateTime 유지(잔여 시간 누적), 날짜 리셋만 반영
       if (dayPatch) setState((p) => ({ ...p, ...dayPatch }));
-      return;
+      return null;
     }
     const drawn = drawGomul(items, IDLE_WEIGHTS);
     setState((p) => ({ ...p, ...dayPatch, cart: addCounts(p.cart, drawn), lastUpdateTime: now }));
+    return drawn;
   }, []);
 
-  const pickUp = useCallback(() => {
+  const pickUp = useCallback((): GomulCounts | null => {
     const s = stateRef.current;
     const room = CART_CAPACITY - totalCount(s.cart);
-    if (room <= 0) return;
+    if (room <= 0) return null;
     const bonusMult = s.visitStreak >= STREAK_BONUS_DAYS ? STREAK_BONUS_MULT : 1;
     const drawn = drawGomul(Math.min(room, Math.round(ITEMS_PER_PICK * bonusMult)), ACTIVE_WEIGHTS);
     setState((p) => ({ ...p, cart: addCounts(p.cart, drawn) }));
+    return drawn;
   }, []);
 
   // 손수레 고물을 즉시 판매 → 엽전 (광고 보고 팔기 = 엽전 획득)

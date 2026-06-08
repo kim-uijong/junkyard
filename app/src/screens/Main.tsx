@@ -18,6 +18,7 @@ import { CoinIcon } from '../components/CoinIcon';
 import { GomulIcon } from '../components/GomulIcon';
 import { InfoModal } from '../components/InfoModal';
 import { IntroOverlay } from '../components/IntroOverlay';
+import { RewardPopup } from '../components/RewardPopup';
 import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
@@ -26,11 +27,13 @@ import {
   ATTEND_WON,
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
+  EMPTY_COUNTS,
   GOMUL_TYPES,
   IDLE_MS_PER_ITEM,
   ITEMS_PER_PICK,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
+  type GomulCounts,
   sellValue,
   totalCount,
 } from '../constants/gomul';
@@ -59,7 +62,12 @@ export function Main({ onGoExchange }: MainProps) {
   } = useUserStateContext();
   const { playInterstitial } = useAds();
 
-  useIdleGrowth(applyIdle, loaded);
+  // 획득 결과 팝업(줍기 / 오랜만 복귀 시 방치 정산)
+  const [reward, setReward] = useState<{ counts: GomulCounts; title: string } | null>(null);
+
+  useIdleGrowth(applyIdle, loaded, (gain) =>
+    setReward({ counts: gain, title: COPY.main.rewardIdleTitle })
+  );
 
   const [guideOpen, setGuideOpen] = useState(false);
   // 1초 틱 — '다음 고물까지' 진행바 애니메이션용(표시 전용, 실제 적립은 서버시각 기준).
@@ -82,7 +90,8 @@ export function Main({ onGoExchange }: MainProps) {
   const handlePickUp = useCallback(async () => {
     try {
       await playInterstitial(AD_IDS.interstitial, 'small');
-      pickUp();
+      const got = pickUp();
+      if (got) setReward({ counts: got, title: COPY.main.rewardPickTitle });
     } catch (e) {
       showAdError(e);
     }
@@ -324,6 +333,12 @@ export function Main({ onGoExchange }: MainProps) {
 
       <IntroOverlay visible={showIntro} onDone={handleIntroDone} />
       <InfoModal visible={guideOpen} onClose={() => setGuideOpen(false)} />
+      <RewardPopup
+        visible={!!reward}
+        counts={reward?.counts ?? EMPTY_COUNTS}
+        title={reward?.title ?? ''}
+        onClose={() => setReward(null)}
+      />
     </SafeAreaView>
   );
 }
