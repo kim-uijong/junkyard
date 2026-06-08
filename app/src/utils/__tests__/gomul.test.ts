@@ -22,7 +22,7 @@ describe('pickGomul — 가중치 분포', () => {
     }
   }
   it('방치 분포가 98/2/0/0에 근접해야 한다 (폐지·공병만)', () => ratios(IDLE_WEIGHTS));
-  it('활동 분포가 24/53/20/2에 근접해야 한다', () => ratios(ACTIVE_WEIGHTS));
+  it('활동 분포가 20/45/30/5에 근접해야 한다', () => ratios(ACTIVE_WEIGHTS));
 });
 
 describe('drawGomul — 개수/합산', () => {
@@ -67,8 +67,8 @@ describe('활동 인센티브 — 광고로 줍는 게 더 값짐', () => {
     const activeAvg = active / N;
     expect(idleAvg).toBeGreaterThan(0.95); // ≈1.08 (폐지·공병만)
     expect(idleAvg).toBeLessThan(1.4);
-    expect(activeAvg).toBeGreaterThan(7); // ≈8.98
-    expect(activeAvg).toBeLessThan(11);
+    expect(activeAvg).toBeGreaterThan(11); // ≈13.45
+    expect(activeAvg).toBeLessThan(16);
     expect(activeAvg).toBeGreaterThan(idleAvg * 2.5);
   });
 });

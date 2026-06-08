@@ -21,8 +21,8 @@ export const GOMUL_INFO: Record<GomulType, GomulInfo> = {
 // 방치는 손수레 적재량으로만 관리(일일 상한 없음). 방치 고물 EV를 아주 낮게(≈1.08냥/개) →
 // 부지런히 비워가며 채워도(하루 최대 ~3카트) 광고로 현금화하므로 마진 흑자. 고철·금덩이는 줍기에서만.
 export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 98, bottle: 2, scrap: 0, special: 0 };
-// 활동(광고 줍기): 공병 위주 + 고철·금덩이도 나옴 (EV≈8.98냥). 가중치는 자동 정규화(합 99).
-export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 24, bottle: 53, scrap: 20, special: 2 };
+// 활동(광고 줍기): 고철·금덩이 비중↑로 보상 체감 강화 (EV≈13.45냥, 5개=약 67냥/광고).
+export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 20, bottle: 45, scrap: 30, special: 5 };
 
 export const CART_CAPACITY = 120;   // 손수레 최대 적재(개)
 export const ITEMS_PER_PICK = 5;    // '추가로 고물 모으기' 광고 1회당 고물 수 (한 줌씩 → 광고 보람)
