@@ -9,7 +9,8 @@ import {
   EMPTY_COUNTS,
   IDLE_MS_PER_ITEM,
   IDLE_WEIGHTS,
-  ITEMS_PER_PICK,
+  ITEMS_PER_PICK_MAX,
+  ITEMS_PER_PICK_MIN,
   LIFETIME_CAP_WON,
   OFFLINE_CAP_MS,
   STREAK_BONUS_DAYS,
@@ -120,7 +121,10 @@ export function useUserState(): UseUserStateResult {
     const room = CART_CAPACITY - totalCount(s.cart);
     if (room <= 0) return null;
     const bonusMult = s.visitStreak >= STREAK_BONUS_DAYS ? STREAK_BONUS_MULT : 1;
-    const drawn = drawGomul(Math.min(room, Math.round(ITEMS_PER_PICK * bonusMult)), ACTIVE_WEIGHTS);
+    // 5~10개 랜덤
+    const pickCount =
+      ITEMS_PER_PICK_MIN + Math.floor(Math.random() * (ITEMS_PER_PICK_MAX - ITEMS_PER_PICK_MIN + 1));
+    const drawn = drawGomul(Math.min(room, Math.round(pickCount * bonusMult)), ACTIVE_WEIGHTS);
     setState((p) => ({ ...p, cart: addCounts(p.cart, drawn) }));
     return drawn;
   }, []);

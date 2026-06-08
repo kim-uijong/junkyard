@@ -25,7 +25,9 @@ export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 98, bottle: 2, s
 export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 20, bottle: 45, scrap: 30, special: 5 };
 
 export const CART_CAPACITY = 120;   // 손수레 최대 적재(개)
-export const ITEMS_PER_PICK = 5;    // '추가로 고물 모으기' 광고 1회당 고물 수 (한 줌씩 → 광고 보람)
+// '추가로 고물 모으기' 광고 1회당 고물 수 = 5~10개 랜덤(평균 7.5, 가끔 대박)
+export const ITEMS_PER_PICK_MIN = 5;
+export const ITEMS_PER_PICK_MAX = 10;
 
 // 전환 (엽전 → 토스 포인트). 100냥 = 1원 (금덩이 1개 = 1원 잭팟).
 export const YEOP_PER_WON = 100;

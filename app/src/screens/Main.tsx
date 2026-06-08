@@ -30,7 +30,7 @@ import {
   EMPTY_COUNTS,
   GOMUL_TYPES,
   IDLE_MS_PER_ITEM,
-  ITEMS_PER_PICK,
+  ITEMS_PER_PICK_MIN,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
   type GomulCounts,
@@ -147,8 +147,8 @@ export function Main({ onGoExchange }: MainProps) {
 
   const cartCount = totalCount(state.cart);
   const isCartFull = cartCount >= CART_CAPACITY;
-  // 줍기 한 번(5개)이 안 들어갈 만큼 빈자리가 적으면 줍기 차단 → 광고 보고 덜 받는 손해 방지
-  const pickBlocked = CART_CAPACITY - cartCount < ITEMS_PER_PICK;
+  // 빈자리가 줍기 최소치(5개)보다 적으면 줍기 차단 → 광고 보고 너무 적게 받는 손해 방지
+  const pickBlocked = CART_CAPACITY - cartCount < ITEMS_PER_PICK_MIN;
   const isCartEmpty = cartCount <= 0;
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
