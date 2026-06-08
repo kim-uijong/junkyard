@@ -12,7 +12,7 @@
 
 | 행동 | 광고 | 적립 | 비고 |
 |---|---|---|---|
-| 줍기 | 1회 | 5~10개(평균7.5) × 13.45냥 ≈ 101냥(1.0원) | 활동 적립의 핵심(20/45/30/5) |
+| 줍기 | 1회 | 5~10개(평균7.5) × 10.6냥 ≈ 80냥(0.8원) | 활동 적립의 핵심(25/47/25/3, 빙수 동급) |
 | 판매 | 1회 | 0 (실현) | 광고수익만 → 마진 보강 |
 | 교환 | 1회 | 0 (현금화) | 광고수익만 |
 | 방치 | 0회 | 개당 1.08냥(폐지98/공병2, 고철·금덩이 X), **손수레 적재량으로만 관리(냥 상한 없음)** | 안심용 장식 |
@@ -29,7 +29,7 @@
 - DAU당 매출 ~41원 / 지급 ~17원 → **순익 ~24원/일**.
 - ⚠️ 배너는 현실 eCPM 낮음(100~300) → 수익은 전면 기준, 배너는 보너스.
 
-**상수**(`constants/gomul.ts`): `YEOP_PER_WON=100`, `ITEMS_PER_PICK_MIN=5/MAX=10`(5~10 랜덤), `DAILY_EXCHANGE_CAP_WON=1000`, `IDLE_MS_PER_ITEM=360000`(6분, 12h 가득), `OFFLINE_CAP_MS=12h`, `IDLE_WEIGHTS={paper:98,bottle:2}`, `ACTIVE_WEIGHTS={paper:20,bottle:45,scrap:30,special:5}`. 구현: `applyIdle`이 손수레 빈자리(room)까지만 적재(일일 냥 상한·todayIdleYeop 제거).
+**상수**(`constants/gomul.ts`): `YEOP_PER_WON=100`, `ITEMS_PER_PICK_MIN=5/MAX=10`(5~10 랜덤), `DAILY_EXCHANGE_CAP_WON=1000`, `IDLE_MS_PER_ITEM=360000`(6분, 12h 가득), `OFFLINE_CAP_MS=12h`, `IDLE_WEIGHTS={paper:98,bottle:2}`, `ACTIVE_WEIGHTS={paper:25,bottle:47,scrap:25,special:3}`(EV 10.6냥, 광고당 ~0.8원). 구현: `applyIdle`이 손수레 빈자리(room)까지만 적재(일일 냥 상한·todayIdleYeop 제거).
 
 ---
 
