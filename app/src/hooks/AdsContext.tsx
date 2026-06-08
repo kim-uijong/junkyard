@@ -1,7 +1,15 @@
-import React, { createContext, useCallback, useContext, useState, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 import { AdLoadingPopup } from '../components/AdLoadingPopup';
 import { SmallLoading } from '../components/SmallLoading';
-import { playInterstitial } from '../utils/ads';
+import { AD_IDS } from '../constants/adIds';
+import { playInterstitial, preloadInterstitial } from '../utils/ads';
 
 type LoadingMode = 'small' | 'full';
 
@@ -13,6 +21,11 @@ const AdsContext = createContext<AdsContextValue | null>(null);
 
 export function AdsProvider({ children }: PropsWithChildren) {
   const [mode, setMode] = useState<LoadingMode | null>(null);
+
+  // 화면 진입 시 전면광고 미리 로드 → 탭 시 즉시 표시(대기시간 제거).
+  useEffect(() => {
+    preloadInterstitial(AD_IDS.interstitial);
+  }, []);
 
   const play = useCallback(async (adGroupId: string, loadingMode: LoadingMode) => {
     setMode(loadingMode);

@@ -1,16 +1,18 @@
 import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/framework';
 
-// 전면광고 추상화.
+// 전면광고 추상화. 문서 권장 패턴: load(미리) → show → 다음 load.
+// 화면 진입 시 preloadInterstitial로 미리 로드해 두면, 탭 시 즉시 표시(대기시간 X).
 // USE_MOCK=true: 샌드박스/개발용. 1.5초 지연 후 성공.
-// USE_MOCK=false (Phase 5b 라이브 베타 배포 시): 실제 loadFullScreenAd + showFullScreenAd.
 // R-10 인터벌 가드: MIN_INTERVAL_MS 미만 간격 호출 시 AdCooldownError.
 
 const USE_MOCK = false;
 const MOCK_DELAY_MS = 1500;
 export const MIN_INTERVAL_MS = 5000;
 
-// lastPlayedAt: 인터벌 가드. inFlight: 광고 재생 중 중복 호출 차단(빠른 더블탭 이중 보상 방지).
-const state = { lastPlayedAt: 0, inFlight: false };
+// lastPlayedAt: 인터벌 가드. inFlight: 재생 중 중복 호출 차단(더블탭 이중보상 방지).
+// loaded: 미리 로드 완료 여부. loadPromise: 진행 중인 로드(중복 로드 방지, 같은 adGroupId 1개만).
+const state = { lastPlayedAt: 0, inFlight: false, loaded: false };
+let loadPromise: Promise<void> | null = null;
 
 export class AdCooldownError extends Error {
   constructor() {
@@ -26,8 +28,28 @@ export class AdFailedError extends Error {
   }
 }
 
+// 광고가 준비될 때까지의 Promise. 이미 로드됐으면 즉시 resolve, 진행 중이면 그 Promise 재사용.
+function ensureLoaded(adGroupId: string): Promise<void> {
+  if (state.loaded) return Promise.resolve();
+  if (loadPromise) return loadPromise;
+  loadPromise = loadAdAsync(adGroupId)
+    .then(() => {
+      state.loaded = true;
+    })
+    .finally(() => {
+      loadPromise = null;
+    });
+  return loadPromise;
+}
+
+// 화면 진입 / 광고 닫힘 직후 호출 → 다음 광고를 백그라운드로 미리 로드.
+export function preloadInterstitial(adGroupId: string): void {
+  if (USE_MOCK) return;
+  if (!loadFullScreenAd.isSupported()) return;
+  void ensureLoaded(adGroupId).catch(() => undefined);
+}
+
 export async function playInterstitial(adGroupId: string): Promise<void> {
-  // 이미 광고가 재생 중이면(더블탭 등) 즉시 차단 → 보상 함수가 두 번 호출되지 않게.
   if (state.inFlight) throw new AdCooldownError();
   const now = Date.now();
   if (now - state.lastPlayedAt < MIN_INTERVAL_MS) throw new AdCooldownError();
@@ -43,11 +65,14 @@ export async function playInterstitial(adGroupId: string): Promise<void> {
     if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
       throw new AdFailedError('not-supported');
     }
-    await loadAdAsync(adGroupId);
+    // 미리 로드돼 있으면 즉시, 아니면 로드 완료까지 대기(폴백).
+    await ensureLoaded(adGroupId);
+    state.loaded = false; // 소비
     await showAdAsync(adGroupId);
     state.lastPlayedAt = Date.now();
   } finally {
     state.inFlight = false;
+    preloadInterstitial(adGroupId); // 다음 광고 미리 로드
   }
 }
 

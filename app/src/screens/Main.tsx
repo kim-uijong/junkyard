@@ -255,7 +255,7 @@ export function Main({ onGoExchange }: MainProps) {
               compact
               ad
               style={styles.flex1}
-              note={COPY.main.boosterNoteFormat(BOOSTER_MULTIPLIER * 100)}
+              note={COPY.main.boosterNoteFormat(BOOSTER_MULTIPLIER)}
               onPress={handleBoosterPress}
             />
           )}

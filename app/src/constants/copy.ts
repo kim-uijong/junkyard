@@ -30,7 +30,7 @@ export const COPY = {
     btnSell: '고물 판매하기',
     btnNoteAd: '광고 시청 후 진행돼요',
     btnNoteBoosterDuration: '1시간 동안 빠르게 주워요',
-    boosterNoteFormat: (pct: number) => `1시간 동안 ${pct.toLocaleString()}% 더 빨리`,
+    boosterNoteFormat: (mult: number) => `1시간 동안 ${mult}배 빠르게`,
     sellNote: '쌓인 고물을 엽전으로',
     cartFullNote: '손수레가 가득 찼어요. 고물을 팔아주세요',
     cartNearFullNote: '거의 찼어요. 고물을 팔고 모아요',
