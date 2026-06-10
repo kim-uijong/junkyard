@@ -17,10 +17,10 @@ export const GOMUL_INFO: Record<GomulType, GomulInfo> = {
   special: { label: '금덩이', emoji: '🪙', price: 100 },
 };
 
-// 확률 가중치 — 방치(idle)는 폐지·공병만(공병은 낮은 확률), 활동(광고 줍기)은 비싼 고물↑.
-// 방치는 손수레 적재량으로만 관리(일일 상한 없음). 방치 고물 EV를 아주 낮게(≈1.08냥/개) →
-// 부지런히 비워가며 채워도(하루 최대 ~3카트) 광고로 현금화하므로 마진 흑자. 고철·금덩이는 줍기에서만.
-export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 98, bottle: 2, scrap: 0, special: 0 };
+// 확률 가중치 — 방치(idle)는 폐지 위주(공병·고철 소량), 활동(광고 줍기)은 비싼 고물↑.
+// 방치는 손수레 적재량으로만 관리(일일 상한 없음). EV를 낮게(≈1.35냥/개) 유지해야
+// 부지런히 비워가며 채워도(하루 최대 ~2카트) 광고로 현금화 시 마진 흑자. 금덩이는 줍기에서만.
+export const IDLE_WEIGHTS: Record<GomulType, number> = { paper: 94, bottle: 5, scrap: 1, special: 0 };
 // 활동(광고 줍기): EV≈10.6냥. 5~10개(평균 7.5) → 줍기 광고당 약 80냥(≈0.8원) = 빙수와 동급 마진(~37%).
 export const ACTIVE_WEIGHTS: Record<GomulType, number> = { paper: 25, bottle: 47, scrap: 25, special: 3 };
 
