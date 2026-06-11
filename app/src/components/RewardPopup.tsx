@@ -13,7 +13,7 @@ interface RewardPopupProps {
 }
 
 // 자동으로 닫히기까지의 시간(ms). 광고 후 잠깐 떴다 사라짐 — '확인' 탭 불필요.
-const AUTO_DISMISS_MS = 1600;
+const AUTO_DISMISS_MS = 500;
 
 // 줍기/오프라인 복귀 시 획득한 고물 내역 팝업. 잠깐 떴다가 자동으로 사라짐(탭하면 즉시 닫힘).
 export function RewardPopup({ visible, counts, title, onClose }: RewardPopupProps) {
