@@ -14,9 +14,7 @@ import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import { DAILY_EXCHANGE_CAP_WON, LIFETIME_CAP_WON, YEOP_PER_WON } from '../constants/gomul';
-import { useAds } from '../hooks/AdsContext';
 import { useUserStateContext } from '../hooks/UserStateContext';
-import { AdCooldownError } from '../utils/ads';
 import { grantPromotion } from '../utils/promotion';
 import { promotionErrorMessage } from '../utils/promotionErrors';
 
@@ -26,7 +24,6 @@ interface ExchangeProps {
 
 export function Exchange({ onBack }: ExchangeProps) {
   const { state, loaded, commitExchange } = useUserStateContext();
-  const { playInterstitial } = useAds();
   const [pending, setPending] = useState(false);
 
   // 전환 가능 원 = min(엽전/환율, 일일 잔여, 누적 잔여)
@@ -44,7 +41,7 @@ export function Exchange({ onBack }: ExchangeProps) {
 
     setPending(true);
     try {
-      await playInterstitial(AD_IDS.interstitial, 'full');
+      // 엽전→토스 포인트 교환은 광고 없이 바로 지급(UX 우선). 고물→엽전(판매)에만 광고.
       const result = await grantPromotion({ promotionCode: PROMO_CODES.reward, amount: exchangeableWon });
       if ('key' in result) {
         commitExchange(exchangeableWon);
@@ -53,14 +50,12 @@ export function Exchange({ onBack }: ExchangeProps) {
         const { message } = promotionErrorMessage(result.errorCode);
         Alert.alert(COPY.exchange.failTitle, message);
       }
-    } catch (e) {
-      if (!(e instanceof AdCooldownError)) {
-        Alert.alert(COPY.exchange.failTitle, COPY.exchange.failGenericMessage);
-      }
+    } catch {
+      Alert.alert(COPY.exchange.failTitle, COPY.exchange.failGenericMessage);
     } finally {
       setPending(false);
     }
-  }, [pending, exchangeableWon, playInterstitial, commitExchange]);
+  }, [pending, exchangeableWon, commitExchange]);
 
   if (!loaded) {
     return (

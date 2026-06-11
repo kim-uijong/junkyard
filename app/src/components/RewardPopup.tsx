@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
@@ -12,14 +12,27 @@ interface RewardPopupProps {
   onClose: () => void;
 }
 
-// 줍기/오프라인 복귀 시 획득한 고물 내역 팝업.
+// 자동으로 닫히기까지의 시간(ms). 광고 후 잠깐 떴다 사라짐 — '확인' 탭 불필요.
+const AUTO_DISMISS_MS = 1600;
+
+// 줍기/오프라인 복귀 시 획득한 고물 내역 팝업. 잠깐 떴다가 자동으로 사라짐(탭하면 즉시 닫힘).
 export function RewardPopup({ visible, counts, title, onClose }: RewardPopupProps) {
   const total = totalCount(counts);
   const yeop = sellValue(counts);
+
+  // onClose는 매 렌더 새로 생기므로 ref로 고정 — 타이머가 visible 변화에만 반응(매초 리셋 방지).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useEffect(() => {
+    if (!visible) return;
+    const id = setTimeout(() => onCloseRef.current(), AUTO_DISMISS_MS);
+    return () => clearTimeout(id);
+  }, [visible]);
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={styles.card} onPress={onClose}>
           <Text style={styles.title}>{title}</Text>
 
           <View style={styles.row}>
@@ -32,13 +45,6 @@ export function RewardPopup({ visible, counts, title, onClose }: RewardPopupProp
           </View>
 
           <Text style={styles.total}>{COPY.main.rewardCountFormat(total, yeop)}</Text>
-
-          <Pressable
-            style={({ pressed }) => [styles.btn, pressed && styles.pressed]}
-            onPress={onClose}
-          >
-            <Text style={styles.btnText}>{COPY.main.rewardConfirm}</Text>
-          </Pressable>
         </Pressable>
       </Pressable>
     </Modal>
@@ -58,7 +64,7 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    paddingVertical: 22,
+    paddingVertical: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
     gap: 16,
@@ -69,13 +75,4 @@ const styles = StyleSheet.create({
   itemDim: { opacity: 0.3 },
   count: { fontSize: 16, fontWeight: '800', color: COLORS.redBerryShade },
   total: { fontSize: 15, fontWeight: '700', color: COLORS.textMuted },
-  btn: {
-    width: '100%',
-    backgroundColor: COLORS.redBerry,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  btnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  pressed: { opacity: 0.85 },
 });
