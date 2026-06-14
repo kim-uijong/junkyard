@@ -99,6 +99,9 @@ function loadAdAsync(adGroupId: string): Promise<void> {
 function showAdAsync(adGroupId: string): Promise<void> {
   return new Promise((resolve, reject) => {
     let settled = false;
+    // 광고가 실제로 표시됐는지(show/impression). 노출 없이 dismissed면 '안 본 광고'로 실패 처리
+    // → 광고 안 보고 보상이 지급되는 것 방지(이벤트 흐름: requested→show→impression→dismissed).
+    let displayed = false;
     let unregister: (() => void) | undefined;
     const finish = (fn: () => void) => {
       if (settled) return;
@@ -109,8 +112,14 @@ function showAdAsync(adGroupId: string): Promise<void> {
     unregister = showFullScreenAd({
       options: { adGroupId },
       onEvent: (e) => {
-        if (e.type === 'dismissed') finish(resolve);
-        else if (e.type === 'failedToShow') finish(() => reject(new AdFailedError('failed-to-show')));
+        if (e.type === 'show' || e.type === 'impression') {
+          displayed = true;
+        } else if (e.type === 'dismissed') {
+          if (displayed) finish(resolve);
+          else finish(() => reject(new AdFailedError('not-displayed')));
+        } else if (e.type === 'failedToShow') {
+          finish(() => reject(new AdFailedError('failed-to-show')));
+        }
       },
       onError: (err) => finish(() => reject(err instanceof Error ? err : new AdFailedError('show-error'))),
     });
