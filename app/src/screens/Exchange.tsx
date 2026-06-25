@@ -95,9 +95,11 @@ export function Exchange({ onBack }: ExchangeProps) {
           <Text style={styles.exchangeBtnText}>
             {exchangeableWon >= 1
               ? COPY.exchange.btnExchangeFormat(exchangeableWon)
-              : dailyLeft <= 0
-                ? COPY.exchange.dailyCapReached
-                : COPY.exchange.noExchangeable}
+              : lifetimeLeft <= 0
+                ? COPY.exchange.lifetimeCapReached
+                : dailyLeft <= 0
+                  ? COPY.exchange.dailyCapReached
+                  : COPY.exchange.noExchangeable}
           </Text>
         </Pressable>
         <Text style={styles.note}>{COPY.exchange.exchangeNote}</Text>

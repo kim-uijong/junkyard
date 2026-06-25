@@ -65,6 +65,7 @@ export const COPY = {
     btnExchangeFormat: (won: number) => `${won}원 받기`,
     noExchangeable: '교환할 엽전이 부족해요',
     dailyCapReached: '오늘 받을 수 있는 한도를 다 채웠어요',
+    lifetimeCapReached: '누적 교환 한도(5,000원)에 도달했어요',
     pendingText: '교환 처리 중...',
     summaryLabel: '누적 교환',
     summaryFormat: (won: number) => `${won.toLocaleString()}원`,
