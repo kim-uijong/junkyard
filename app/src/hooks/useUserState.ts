@@ -26,9 +26,11 @@ function dateKeyKST(ms: number): string {
   return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-// 월 리셋 키(KST yyyy-mm). 서버시각 기준이라 클럭 조작에 안전.
-function monthKeyKST(ms: number): string {
-  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
+// 주 리셋 키(KST, 월요일 시작 7일 버킷). 서버시각 기준이라 클럭 조작에 안전.
+// 1970-01-01(목)=day0 → (day+3)/7 로 월요일 경계 정렬.
+function weekKeyKST(ms: number): string {
+  const dayIndex = Math.floor((ms + 9 * 60 * 60 * 1000) / 86400000);
+  return `W${Math.floor((dayIndex + 3) / 7)}`;
 }
 
 export interface UseUserStateResult {
@@ -85,10 +87,10 @@ export function useUserState(): UseUserStateResult {
         visitStreak,
       };
     }
-    // 월이 바뀌면 이번 달 교환액 리셋(월 단위 교환 한도). 월 변경은 항상 일 변경을 동반.
-    const thisMonth = monthKeyKST(now);
-    if (s.exchangeMonth !== thisMonth) {
-      dayPatch = { ...(dayPatch ?? {}), monthExchangedWon: 0, exchangeMonth: thisMonth };
+    // 주가 바뀌면 이번 주 교환액 리셋(7일 단위 교환 한도). 주 변경은 항상 일 변경을 동반.
+    const thisWeek = weekKeyKST(now);
+    if (s.exchangeWeek !== thisWeek) {
+      dayPatch = { ...(dayPatch ?? {}), weekExchangedWon: 0, exchangeWeek: thisWeek };
     }
     // 개근 보너스: 연속 방문 7일 이상이면 수집량 +10%
     const effectiveStreak = dayPatch ? dayPatch.visitStreak! : s.visitStreak;
@@ -146,7 +148,7 @@ export function useUserState(): UseUserStateResult {
     });
   }, []);
 
-  // 토스 지급 성공 후 호출 — 엽전 차감 + 이번 달/일일 교환액 갱신.
+  // 토스 지급 성공 후 호출 — 엽전 차감 + 이번 주/일일 교환액 갱신.
   const commitExchange = useCallback((won: number) => {
     setState((s) => {
       const cost = won * YEOP_PER_WON;
@@ -154,7 +156,7 @@ export function useUserState(): UseUserStateResult {
       return {
         ...s,
         yeopjeon: s.yeopjeon - cost,
-        monthExchangedWon: s.monthExchangedWon + won,
+        weekExchangedWon: s.weekExchangedWon + won,
         todayExchangedWon: s.todayExchangedWon + won,
       };
     });
