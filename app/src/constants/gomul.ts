@@ -32,7 +32,7 @@ export const ITEMS_PER_PICK_MAX = 10;
 // 전환 (엽전 → 토스 포인트). 100냥 = 1원 (금덩이 1개 = 1원 잭팟).
 export const YEOP_PER_WON = 100;
 export const DAILY_EXCHANGE_CAP_WON = 1000;  // 일일 전환 토스 지급 캡(원) — 마케팅 상한. 실제 지급은 광고 시청량이 제한(방치 2원/일 상한)
-export const LIFETIME_CAP_WON = 5000;      // 1인 누적 한도(원)
+export const MONTHLY_EXCHANGE_CAP_WON = 5000;  // 월 교환 한도(원) — 매월 초기화. (토스 정책은 1회 지급당 5,000 상한이며 1인 누적 제한은 없음)
 
 // 출석(광고 보고 1원). 하루 5회.
 export const ATTEND_DAILY_LIMIT = 5;

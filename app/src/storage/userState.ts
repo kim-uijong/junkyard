@@ -9,7 +9,8 @@ export interface UserState {
   yeopjeon: number;           // 인앱 재화
   lastUpdateTime: number;     // 마지막 방치 정산 서버시각(ms)
   boosterEndTime: number;
-  lifetimeExchanged: number;  // 누적 토스 지급(원)
+  monthExchangedWon: number;  // 이번 달 교환액(원) — 월 단위로 리셋
+  exchangeMonth: string;      // 월 리셋 키 (KST yyyy-mm)
   todayDate: string;          // 일일 리셋 키 (KST yyyy-mm-dd)
   todayExchangedWon: number;  // 오늘 전환액(원)
   todayAttendCount: number;   // 오늘 출석(광고 1원) 횟수
@@ -24,7 +25,8 @@ export const DEFAULT_STATE: UserState = {
   yeopjeon: 0,
   lastUpdateTime: 0,
   boosterEndTime: 0,
-  lifetimeExchanged: 0,
+  monthExchangedWon: 0,
+  exchangeMonth: '',
   todayDate: '',
   todayExchangedWon: 0,
   todayAttendCount: 0,

@@ -13,7 +13,7 @@ import { BannerAd } from '../components/BannerAd';
 import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
-import { DAILY_EXCHANGE_CAP_WON, LIFETIME_CAP_WON, YEOP_PER_WON } from '../constants/gomul';
+import { DAILY_EXCHANGE_CAP_WON, MONTHLY_EXCHANGE_CAP_WON, YEOP_PER_WON } from '../constants/gomul';
 import { useUserStateContext } from '../hooks/UserStateContext';
 import { grantPromotion } from '../utils/promotion';
 import { promotionErrorMessage } from '../utils/promotionErrors';
@@ -26,10 +26,10 @@ export function Exchange({ onBack }: ExchangeProps) {
   const { state, loaded, commitExchange } = useUserStateContext();
   const [pending, setPending] = useState(false);
 
-  // 전환 가능 원 = min(엽전/환율, 일일 잔여, 누적 잔여)
+  // 전환 가능 원 = min(엽전/환율, 일일 잔여, 이번 달 잔여)
   const dailyLeft = Math.max(0, DAILY_EXCHANGE_CAP_WON - state.todayExchangedWon);
-  const lifetimeLeft = Math.max(0, LIFETIME_CAP_WON - state.lifetimeExchanged);
-  const exchangeableWon = Math.min(Math.floor(state.yeopjeon / YEOP_PER_WON), dailyLeft, lifetimeLeft);
+  const monthlyLeft = Math.max(0, MONTHLY_EXCHANGE_CAP_WON - state.monthExchangedWon);
+  const exchangeableWon = Math.min(Math.floor(state.yeopjeon / YEOP_PER_WON), dailyLeft, monthlyLeft);
 
   const handleExchange = useCallback(async () => {
     if (pending || exchangeableWon < 1) return;
@@ -95,8 +95,8 @@ export function Exchange({ onBack }: ExchangeProps) {
           <Text style={styles.exchangeBtnText}>
             {exchangeableWon >= 1
               ? COPY.exchange.btnExchangeFormat(exchangeableWon)
-              : lifetimeLeft <= 0
-                ? COPY.exchange.lifetimeCapReached
+              : monthlyLeft <= 0
+                ? COPY.exchange.monthlyCapReached
                 : dailyLeft <= 0
                   ? COPY.exchange.dailyCapReached
                   : COPY.exchange.noExchangeable}
@@ -113,7 +113,7 @@ export function Exchange({ onBack }: ExchangeProps) {
 
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>{COPY.exchange.summaryLabel}</Text>
-          <Text style={styles.summaryValue}>{COPY.exchange.summaryFormat(state.lifetimeExchanged)}</Text>
+          <Text style={styles.summaryValue}>{COPY.exchange.summaryFormat(state.monthExchangedWon)}</Text>
         </View>
       </ScrollView>
 

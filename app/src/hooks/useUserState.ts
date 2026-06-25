@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ACTIVE_WEIGHTS,
   ATTEND_DAILY_LIMIT,
-  ATTEND_WON,
   BOOSTER_MS,
   BOOSTER_MULTIPLIER,
   CART_CAPACITY,
@@ -11,7 +10,6 @@ import {
   IDLE_WEIGHTS,
   ITEMS_PER_PICK_MAX,
   ITEMS_PER_PICK_MIN,
-  LIFETIME_CAP_WON,
   OFFLINE_CAP_MS,
   STREAK_BONUS_DAYS,
   STREAK_BONUS_MULT,
@@ -26,6 +24,11 @@ import { DEFAULT_STATE, loadUserState, saveUserState, type UserState } from '../
 // 서버 시각(ms) → KST 날짜 키. 일일 캡/리셋 기준.
 function dateKeyKST(ms: number): string {
   return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+// 월 리셋 키(KST yyyy-mm). 서버시각 기준이라 클럭 조작에 안전.
+function monthKeyKST(ms: number): string {
+  return new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
 }
 
 export interface UseUserStateResult {
@@ -81,6 +84,11 @@ export function useUserState(): UseUserStateResult {
         todayAttendCount: 0,
         visitStreak,
       };
+    }
+    // 월이 바뀌면 이번 달 교환액 리셋(월 단위 교환 한도). 월 변경은 항상 일 변경을 동반.
+    const thisMonth = monthKeyKST(now);
+    if (s.exchangeMonth !== thisMonth) {
+      dayPatch = { ...(dayPatch ?? {}), monthExchangedWon: 0, exchangeMonth: thisMonth };
     }
     // 개근 보너스: 연속 방문 7일 이상이면 수집량 +10%
     const effectiveStreak = dayPatch ? dayPatch.visitStreak! : s.visitStreak;
@@ -138,7 +146,7 @@ export function useUserState(): UseUserStateResult {
     });
   }, []);
 
-  // 토스 지급 성공 후 호출 — 엽전 차감 + 누적/일일 갱신.
+  // 토스 지급 성공 후 호출 — 엽전 차감 + 이번 달/일일 교환액 갱신.
   const commitExchange = useCallback((won: number) => {
     setState((s) => {
       const cost = won * YEOP_PER_WON;
@@ -146,20 +154,18 @@ export function useUserState(): UseUserStateResult {
       return {
         ...s,
         yeopjeon: s.yeopjeon - cost,
-        lifetimeExchanged: s.lifetimeExchanged + won,
+        monthExchangedWon: s.monthExchangedWon + won,
         todayExchangedWon: s.todayExchangedWon + won,
       };
     });
   }, []);
 
-  // 출석 광고(1원) 성공 후 호출 — 누적/일일 출석 갱신.
+  // 출석 광고(1원) 성공 후 호출 — 일일 출석 횟수만 갱신(교환 캡과 무관, 출석은 자체 일일 5회 제한).
   const claimAttendance = useCallback(() => {
     setState((s) => {
       if (s.todayAttendCount >= ATTEND_DAILY_LIMIT) return s;
-      if (s.lifetimeExchanged >= LIFETIME_CAP_WON) return s;
       return {
         ...s,
-        lifetimeExchanged: s.lifetimeExchanged + ATTEND_WON,
         todayAttendCount: s.todayAttendCount + 1,
       };
     });

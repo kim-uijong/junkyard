@@ -65,9 +65,9 @@ export const COPY = {
     btnExchangeFormat: (won: number) => `${won}원 받기`,
     noExchangeable: '교환할 엽전이 부족해요',
     dailyCapReached: '오늘 받을 수 있는 한도를 다 채웠어요',
-    lifetimeCapReached: '누적 교환 한도(5,000원)에 도달했어요',
+    monthlyCapReached: '이번 달 교환 한도(5,000원)를 다 채웠어요',
     pendingText: '교환 처리 중...',
-    summaryLabel: '누적 교환',
+    summaryLabel: '이번 달 교환',
     summaryFormat: (won: number) => `${won.toLocaleString()}원`,
     confirmTitle: '교환 확인',
     confirmMessageFormat: (yeop: number, won: number) =>
@@ -95,7 +95,7 @@ export const COPY = {
     introReplay: '소개 다시 보기',
     reset: '데이터 초기화 (개발용)',
     resetConfirmTitle: '데이터 초기화',
-    resetConfirmMessage: '손수레·엽전·누적 교환액이 모두 0으로 돌아가요. 진행할까요?',
+    resetConfirmMessage: '손수레·엽전·이번 달 교환액이 모두 0으로 돌아가요. 진행할까요?',
     resetConfirmYes: '초기화',
     resetConfirmNo: '취소',
     // 노션 공용 페이지(이용약관 + 개인정보 처리방침)
