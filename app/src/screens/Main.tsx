@@ -23,6 +23,7 @@ import { AD_IDS, PROMO_CODES } from '../constants/adIds';
 import { COLORS } from '../constants/colors';
 import { COPY } from '../constants/copy';
 import {
+  ATTEND_COOLDOWN_MS,
   ATTEND_DAILY_LIMIT,
   ATTEND_WON,
   BOOSTER_MULTIPLIER,
@@ -47,6 +48,17 @@ import { getServerTimeWithFallback } from '../utils/timeUtils';
 
 interface MainProps {
   onGoExchange?: () => void;
+}
+
+// 출석 쿨타임 남은 시간 표시 (H시간 M분 / M분 S초 / S초)
+function formatCooldown(ms: number): string {
+  const total = Math.ceil(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) return `${h}시간 ${m}분 후`;
+  if (m > 0) return `${m}분 ${s}초 후`;
+  return `${s}초 후`;
 }
 
 export function Main({ onGoExchange }: MainProps) {
@@ -123,6 +135,7 @@ export function Main({ onGoExchange }: MainProps) {
 
   const handleAttend = useCallback(async () => {
     if (state.todayAttendCount >= ATTEND_DAILY_LIMIT) return;
+    if (Date.now() - state.lastAttendTime < ATTEND_COOLDOWN_MS) return; // 쿨타임 중
     try {
       await playInterstitial(AD_IDS.interstitial, 'small');
       const result = await grantPromotion({ promotionCode: PROMO_CODES.attend, amount: ATTEND_WON });
@@ -135,7 +148,7 @@ export function Main({ onGoExchange }: MainProps) {
     } catch (e) {
       showAdError(e);
     }
-  }, [state.todayAttendCount, playInterstitial, claimAttendance, showAdError]);
+  }, [state.todayAttendCount, state.lastAttendTime, playInterstitial, claimAttendance, showAdError]);
 
   if (!loaded) {
     return (
@@ -153,6 +166,9 @@ export function Main({ onGoExchange }: MainProps) {
   const isBoosterActive = state.boosterEndTime > Date.now();
   const fillRatio = cartCount / CART_CAPACITY;
   const attendDone = state.todayAttendCount >= ATTEND_DAILY_LIMIT;
+  // 출석 2시간 쿨타임(페이싱). nowTick으로 매초 카운트다운.
+  const attendCooldownLeft = Math.max(0, ATTEND_COOLDOWN_MS - (nowTick - state.lastAttendTime));
+  const attendCooldownActive = !attendDone && attendCooldownLeft > 0;
   // 다음 고물 1개까지 진행도(부스터 반영). 손수레 가득 시 멈춤 상태 표시.
   let nextItemPct = 0;
   if (state.lastUpdateTime > 0) {
@@ -310,12 +326,14 @@ export function Main({ onGoExchange }: MainProps) {
           tone="outline"
           compact
           ad
-          disabled={attendDone}
+          disabled={attendDone || attendCooldownActive}
           onPress={handleAttend}
           note={
             attendDone
               ? COPY.main.attendDone
-              : COPY.main.attendLeftFormat(ATTEND_DAILY_LIMIT - state.todayAttendCount)
+              : attendCooldownActive
+                ? COPY.main.attendCooldownFormat(formatCooldown(attendCooldownLeft))
+                : COPY.main.attendLeftFormat(ATTEND_DAILY_LIMIT - state.todayAttendCount)
           }
         />
 

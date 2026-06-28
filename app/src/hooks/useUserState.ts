@@ -162,13 +162,14 @@ export function useUserState(): UseUserStateResult {
     });
   }, []);
 
-  // 출석 광고(1원) 성공 후 호출 — 일일 출석 횟수만 갱신(교환 캡과 무관, 출석은 자체 일일 5회 제한).
+  // 출석 광고(1원) 성공 후 호출 — 일일 출석 횟수 + 쿨타임 시각 갱신.
   const claimAttendance = useCallback(() => {
     setState((s) => {
       if (s.todayAttendCount >= ATTEND_DAILY_LIMIT) return s;
       return {
         ...s,
         todayAttendCount: s.todayAttendCount + 1,
+        lastAttendTime: Date.now(),
       };
     });
   }, []);

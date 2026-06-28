@@ -37,6 +37,7 @@ export const WEEKLY_EXCHANGE_CAP_WON = 5000;  // 주 교환 한도(원) — 7일
 // 출석(광고 보고 1원). 하루 5회.
 export const ATTEND_DAILY_LIMIT = 5;
 export const ATTEND_WON = 1;
+export const ATTEND_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 출석 사이 쿨타임 2시간(페이싱·리텐션)
 
 // 개근 보너스 — 7일 연속 방문 시 수집량 +10%.
 export const STREAK_BONUS_DAYS = 7;

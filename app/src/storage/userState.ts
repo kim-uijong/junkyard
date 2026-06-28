@@ -14,6 +14,7 @@ export interface UserState {
   todayDate: string;          // 일일 리셋 키 (KST yyyy-mm-dd)
   todayExchangedWon: number;  // 오늘 전환액(원)
   todayAttendCount: number;   // 오늘 출석(광고 1원) 횟수
+  lastAttendTime: number;     // 마지막 출석 시각(ms, 로컬) — 2시간 쿨타임용
   visitStreak: number;        // 연속 방문일 (개근 보너스용)
   isFirstLaunch: boolean;
 }
@@ -30,6 +31,7 @@ export const DEFAULT_STATE: UserState = {
   todayDate: '',
   todayExchangedWon: 0,
   todayAttendCount: 0,
+  lastAttendTime: 0,
   visitStreak: 0,
   isFirstLaunch: true,
 };

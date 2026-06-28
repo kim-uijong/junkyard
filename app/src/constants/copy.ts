@@ -50,6 +50,7 @@ export const COPY = {
     harvestFormat: (n: number) => `그동안 고물 ${n}개를 주웠어요`,
     btnAttend: '광고 보고 1원',
     attendLeftFormat: (left: number) => `오늘 ${left}번 더 받을 수 있어요`,
+    attendCooldownFormat: (time: string) => `다음 출석 ${time}`,
     attendDone: '오늘 출석을 완료했어요',
     adErrorTitle: '광고를 불러오지 못했어요',
     adErrorMessage: '잠시 후 다시 시도해주세요',
